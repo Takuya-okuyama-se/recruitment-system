@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>適性検査結果入力 - 採用管理システム</title>
+    <script src="config.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -439,7 +440,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = window.API_CONFIG?.BASE_URL || 'http://localhost:5000';
         let selectedCandidate = null;
 
         // 候補者リストの読み込み

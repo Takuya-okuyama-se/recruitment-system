@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>組織・採用設定 - 採用管理システム</title>
+    <script src="config.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -516,7 +517,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = window.API_CONFIG?.BASE_URL || 'http://localhost:5000';
         let departments = [];
         let positions = [];
 

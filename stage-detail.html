@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ステージ詳細 - 採用管理システム</title>
+    <script src="config.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -432,7 +433,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:5000';
+        const API_BASE = window.API_CONFIG?.BASE_URL || 'http://localhost:5000';
         let currentStage = '書類選考';
         let allCandidates = [];
         let timeChart = null;
