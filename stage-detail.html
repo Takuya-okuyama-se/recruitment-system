@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ステージ詳細 - 採用管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #FF6B35;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .stage-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .stat-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        select, input[type="text"] {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .candidates-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .candidates-table th,
+        .candidates-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .candidates-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        .candidates-table tr:hover {
+            background-color: #f8f9fa;
+        }
+        .action-btn {
+            padding: 5px 15px;
+            font-size: 0.9em;
+            margin: 0 2px;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        .time-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .time-fast {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .time-normal {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .time-slow {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .chart-container {
+            height: 300px;
+            margin: 20px 0;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #FF6B35;
+            transition: width 0.3s ease;
+        }
+        .insights-list {
+            list-style: none;
+            padding: 0;
+        }
+        .insights-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .insights-list li:last-child {
+            border-bottom: none;
+        }
+        .insight-icon {
+            display: inline-block;
+            width: 30px;
+            text-align: center;
+        }
+        /* Responsive Design */
+        /* Mobile styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            .header {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .stage-stats {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-top: 15px;
+            }
+            .stat-box {
+                padding: 15px;
+            }
+            .stat-number {
+                font-size: 2em;
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .card {
+                padding: 20px;
+            }
+            .card h2 {
+                font-size: 1.2em;
+            }
+            .filters {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .filter-group {
+                width: 100%;
+            }
+            select, input[type="text"] {
+                width: 100%;
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+                display: block;
+            }
+            .action-btn {
+                padding: 5px 10px;
+                font-size: 0.8em;
+                margin: 2px 0;
+            }
+            /* Table responsive */
+            .candidates-table {
+                display: block;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .candidates-table th,
+            .candidates-table td {
+                padding: 8px;
+                font-size: 14px;
+            }
+            /* Navigation responsive */
+            nav > div > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            nav a {
+                margin: 2px 0 !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            nav span {
+                display: none !important;
+            }
+            .nav-buttons {
+                margin-bottom: 15px;
+            }
+            .chart-container {
+                height: 250px;
+            }
+        }
+        
+        /* Tablet styles (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .container {
+                max-width: 95%;
+            }
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .stage-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Ensure minimum font size for readability */
+        @media (max-width: 1199px) {
+            body {
+                min-font-size: 14px;
+            }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
+                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
+                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
+                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
+                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
+                <span style="color: white; margin: 0 10px;">|</span>
+                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
+                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
+                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
+                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="header" id="stageHeader">
+            <h1 id="stageName">ステージ詳細</h1>
+            <div class="stage-stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalCandidates">0</div>
+                    <div class="stat-label">候補者数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="passRate">0%</div>
+                    <div class="stat-label">通過率</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="avgDays">0日</div>
+                    <div class="stat-label">平均滞在日数</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="todayCount">0</div>
+                    <div class="stat-label">本日の処理数</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="btn">📊 ダッシュボードへ戻る</a>
+            <button class="btn" onclick="changeStage('書類選考')">書類選考</button>
+            <button class="btn" onclick="changeStage('一次面接')">一次面接</button>
+            <button class="btn" onclick="changeStage('適性検査')">適性検査</button>
+            <button class="btn" onclick="changeStage('最終面接')">最終面接</button>
+            <button class="btn" onclick="changeStage('内定')">内定</button>
+        </div>
+
+        <div class="content-grid">
+            <!-- 候補者リスト -->
+            <div class="card">
+                <h2>候補者一覧</h2>
+                
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>部門:</label>
+                        <select id="departmentFilter" onchange="applyFilters()">
+                            <option value="">全て</option>
+                            <option value="研究開発本部">研究開発本部</option>
+                            <option value="生産技術部">生産技術部</option>
+                            <option value="品質保証部">品質保証部</option>
+                            <option value="マーケティング部">マーケティング部</option>
+                            <option value="人事総務部">人事総務部</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>滞在期間:</label>
+                        <select id="durationFilter" onchange="applyFilters()">
+                            <option value="">全て</option>
+                            <option value="fast">3日以内</option>
+                            <option value="normal">4-7日</option>
+                            <option value="slow">8日以上</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>検索:</label>
+                        <input type="text" id="searchFilter" placeholder="氏名・メール" onkeyup="applyFilters()">
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="candidates-table">
+                        <thead>
+                            <tr>
+                                <th>氏名</th>
+                                <th>応募職種</th>
+                                <th>部門</th>
+                                <th>滞在日数</th>
+                                <th>アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align: center; color: #999;">
+                                    データを読み込み中...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- サイドバー -->
+            <div>
+                <!-- ステージ進捗 -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2>ステージ進捗</h2>
+                    <div id="stageProgress"></div>
+                </div>
+
+                <!-- 時間分析 -->
+                <div class="card" style="margin-bottom: 20px;">
+                    <h2>処理時間分析</h2>
+                    <div class="chart-container">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- インサイト -->
+                <div class="card">
+                    <h2>インサイト</h2>
+                    <ul class="insights-list" id="insightsList">
+                        <li><span class="insight-icon">💡</span> データを分析中...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let currentStage = '書類選考';
+        let allCandidates = [];
+        let timeChart = null;
+
+        // URLパラメータからステージを取得
+        const urlParams = new URLSearchParams(window.location.search);
+        const stageParam = urlParams.get('stage');
+        if (stageParam) {
+            currentStage = decodeURIComponent(stageParam);
+        }
+
+        // ステージ変更
+        function changeStage(stage) {
+            currentStage = stage;
+            window.history.pushState({}, '', `?stage=${encodeURIComponent(stage)}`);
+            loadStageData();
+        }
+
+        // ステージデータの読み込み
+        async function loadStageData() {
+            try {
+                // ステージ概要を取得
+                const overviewRes = await fetch(`${API_BASE}/api/recruitment/overview`);
+                const overviewData = await overviewRes.json();
+                
+                // 現在のステージデータを抽出
+                const stageData = overviewData.stages.find(s => s.name === currentStage);
+                const durationData = overviewData.durations.find(d => d.stage_name === currentStage);
+                
+                updateHeader(stageData, durationData);
+                
+                // 候補者一覧を取得
+                const candidatesRes = await fetch(`${API_BASE}/api/candidates`);
+                const candidatesData = await candidatesRes.json();
+                
+                // 現在のステージの候補者をフィルタ
+                allCandidates = candidatesData.candidates.filter(c => 
+                    c.current_stage === currentStage && c.stage_status === 'in_progress'
+                );
+                
+                displayCandidates(allCandidates);
+                updateStageProgress(stageData);
+                updateTimeChart();
+                generateInsights(stageData, allCandidates);
+                
+            } catch (error) {
+                console.error('Error loading stage data:', error);
+            }
+        }
+
+        // ヘッダー更新
+        function updateHeader(stageData, durationData) {
+            document.getElementById('stageName').textContent = currentStage;
+            
+            if (stageData) {
+                document.getElementById('totalCandidates').textContent = stageData.total_candidates || 0;
+                document.getElementById('passRate').textContent = (stageData.pass_rate || 0) + '%';
+                
+                const avgDays = durationData ? Math.round(parseFloat(durationData.avg_days) || 0) : 0;
+                document.getElementById('avgDays').textContent = avgDays + '日';
+                
+                // 本日の処理数（ダミー）
+                const todayCount = Math.floor(Math.random() * 5);
+                document.getElementById('todayCount').textContent = todayCount;
+            }
+            
+            // ヘッダー色を変更
+            const colors = {
+                '書類選考': '#3498db',
+                '一次面接': '#9b59b6',
+                '適性検査': '#f39c12',
+                '最終面接': '#27ae60',
+                '内定': '#e74c3c'
+            };
+            document.getElementById('stageHeader').style.backgroundColor = colors[currentStage] || '#FF6B35';
+        }
+
+        // 候補者表示
+        function displayCandidates(candidates) {
+            if (candidates.length === 0) {
+                document.getElementById('candidatesTableBody').innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #999;">
+                            このステージに候補者がいません
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const html = candidates.map(c => {
+                // 滞在日数を計算（ダミー）
+                const days = Math.floor(Math.random() * 10) + 1;
+                const timeClass = days <= 3 ? 'time-fast' : days <= 7 ? 'time-normal' : 'time-slow';
+                
+                return `
+                    <tr>
+                        <td><strong>${c.last_name} ${c.first_name}</strong></td>
+                        <td>${c.position_title || '未設定'}</td>
+                        <td>${c.department_name || '未設定'}</td>
+                        <td><span class="time-badge ${timeClass}">${days}日</span></td>
+                        <td>
+                            <button class="btn action-btn btn-success" onclick="processCandidate(${c.id}, 'pass')">
+                                合格
+                            </button>
+                            <button class="btn action-btn btn-danger" onclick="processCandidate(${c.id}, 'fail')">
+                                不合格
+                            </button>
+                            <button class="btn action-btn btn-info" onclick="viewDetails(${c.id})">
+                                詳細
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('candidatesTableBody').innerHTML = html;
+        }
+
+        // フィルター適用
+        function applyFilters() {
+            const department = document.getElementById('departmentFilter').value;
+            const duration = document.getElementById('durationFilter').value;
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            
+            let filtered = allCandidates;
+            
+            if (department) {
+                filtered = filtered.filter(c => c.department_name === department);
+            }
+            
+            if (search) {
+                filtered = filtered.filter(c => 
+                    c.first_name.toLowerCase().includes(search) ||
+                    c.last_name.toLowerCase().includes(search) ||
+                    c.email.toLowerCase().includes(search)
+                );
+            }
+            
+            displayCandidates(filtered);
+        }
+
+        // ステージ進捗更新
+        function updateStageProgress(stageData) {
+            if (!stageData) return;
+            
+            const total = parseInt(stageData.total_candidates) || 0;
+            const passed = parseInt(stageData.passed_candidates) || 0;
+            const failed = total - passed - allCandidates.length;
+            
+            const html = `
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>進行中</span>
+                        <span>${allCandidates.length}名</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(allCandidates.length / total) * 100}%"></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>合格</span>
+                        <span>${passed}名</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(passed / total) * 100}%; background-color: #28a745;"></div>
+                    </div>
+                </div>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>不合格</span>
+                        <span>${failed}名</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(failed / total) * 100}%; background-color: #dc3545;"></div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('stageProgress').innerHTML = html;
+        }
+
+        // 時間分析チャート
+        function updateTimeChart() {
+            const ctx = document.getElementById('timeChart').getContext('2d');
+            
+            if (timeChart) {
+                timeChart.destroy();
+            }
+            
+            // ダミーデータ
+            const data = {
+                labels: ['1日', '2日', '3日', '4日', '5日', '6日', '7日+'],
+                datasets: [{
+                    label: '候補者数',
+                    data: [3, 5, 8, 4, 2, 1, 1],
+                    backgroundColor: '#FF6B35',
+                    borderColor: '#FF6B35',
+                    borderWidth: 1
+                }]
+            };
+            
+            timeChart = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // インサイト生成
+        function generateInsights(stageData, candidates) {
+            const insights = [];
+            
+            if (stageData) {
+                const passRate = parseFloat(stageData.pass_rate) || 0;
+                
+                if (passRate < 30) {
+                    insights.push('<span class="insight-icon">⚠️</span> 通過率が低めです。選考基準の見直しを検討してください。');
+                } else if (passRate > 80) {
+                    insights.push('<span class="insight-icon">✅</span> 高い通過率です。優秀な候補者が集まっています。');
+                }
+            }
+            
+            if (candidates.length > 10) {
+                insights.push('<span class="insight-icon">📈</span> 多くの候補者が滞留しています。処理を急ぎましょう。');
+            }
+            
+            if (candidates.length === 0) {
+                insights.push('<span class="insight-icon">💡</span> このステージに候補者がいません。前段階の処理を確認してください。');
+            }
+            
+            // 部門別の偏り
+            const deptCounts = {};
+            candidates.forEach(c => {
+                const dept = c.department_name || '未設定';
+                deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+            });
+            
+            const maxDept = Object.entries(deptCounts).sort((a, b) => b[1] - a[1])[0];
+            if (maxDept && maxDept[1] > candidates.length * 0.5) {
+                insights.push(`<span class="insight-icon">📊</span> ${maxDept[0]}の候補者が${maxDept[1]}名と多くなっています。`);
+            }
+            
+            const insightsList = document.getElementById('insightsList');
+            insightsList.innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+        }
+
+        // 候補者処理
+        async function processCandidate(candidateId, action) {
+            const actionText = action === 'pass' ? '合格' : '不合格';
+            if (!confirm(`この候補者を${actionText}にしますか？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates/${candidateId}/advance-stage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action })
+                });
+                
+                if (response.ok) {
+                    loadStageData();
+                }
+            } catch (error) {
+                console.error('Error processing candidate:', error);
+            }
+        }
+
+        // 詳細表示
+        function viewDetails(candidateId) {
+            alert(`候補者ID: ${candidateId}の詳細画面は別途実装予定です`);
+        }
+
+        // 初期読み込み
+        loadStageData();
+        
+        // 30秒ごとに自動更新
+        setInterval(loadStageData, 30000);
+    </script>
+    <script src="navigation.js"></script>
+</body>
+</html>

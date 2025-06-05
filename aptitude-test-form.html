@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>適性検査結果入力 - 採用管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF6B35;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .btn-primary {
+            background-color: #FF6B35;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: #FF6B35;
+            margin-bottom: 20px;
+        }
+        .candidate-item {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .candidate-item:hover {
+            background-color: #f8f9fa;
+            border-color: #FF6B35;
+        }
+        .candidate-item.selected {
+            background-color: #fff3e0;
+            border-color: #FF6B35;
+        }
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #FF6B35;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .score-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .score-input input[type="range"] {
+            flex: 1;
+        }
+        .score-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #FF6B35;
+        }
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .result-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .result-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        .result-btn:hover {
+            border-color: #FF6B35;
+        }
+        .result-btn.selected {
+            background-color: #FF6B35;
+            color: white;
+            border-color: #FF6B35;
+        }
+        .result-summary {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            display: none;
+        }
+        .result-summary.show {
+            display: block;
+        }
+        .score-bar {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            height: 20px;
+            margin: 5px 0;
+            overflow: hidden;
+        }
+        .score-fill {
+            height: 100%;
+            background-color: #FF6B35;
+            transition: width 0.3s ease;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        /* Responsive Design */
+        /* Mobile styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .card {
+                padding: 20px;
+            }
+            .card h2 {
+                font-size: 1.2em;
+            }
+            .form-section {
+                padding: 15px;
+                margin-bottom: 20px;
+            }
+            .form-section h3 {
+                font-size: 1.1em;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            input, select, textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+                display: block;
+            }
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+            .score-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .result-options {
+                grid-template-columns: 1fr;
+            }
+            .result-btn {
+                width: 100%;
+                padding: 12px;
+            }
+            /* Navigation responsive */
+            nav > div > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            nav a {
+                margin: 2px 0 !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            nav span {
+                display: none !important;
+            }
+            .nav-buttons {
+                flex-wrap: wrap;
+            }
+            .score-value {
+                min-width: 40px;
+            }
+        }
+        
+        /* Tablet styles (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .container {
+                max-width: 95%;
+            }
+            .grid-container {
+                grid-template-columns: 250px 1fr;
+                gap: 15px;
+            }
+            .score-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Ensure minimum font size for readability */
+        @media (max-width: 1199px) {
+            body {
+                min-font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
+                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
+                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
+                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
+                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
+                <span style="color: white; margin: 0 10px;">|</span>
+                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
+                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
+                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
+                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>📋 適性検査結果入力</h1>
+        
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="btn">📊 ダッシュボード</a>
+            <a href="candidate-form.html" class="btn">👥 候補者管理</a>
+            <a href="evaluation-form.html" class="btn">📝 面接評価</a>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="grid-container">
+            <!-- 候補者選択 -->
+            <div class="card">
+                <h2>候補者選択</h2>
+                <div id="candidatesList">
+                    <p>読み込み中...</p>
+                </div>
+            </div>
+
+            <!-- 適性検査結果入力 -->
+            <div class="card">
+                <h2>適性検査結果</h2>
+                <form id="aptitudeTestForm" style="display: none;">
+                    <input type="hidden" id="candidate_id" name="candidate_id">
+                    
+                    <div class="form-group">
+                        <label for="test_date">検査実施日 *</label>
+                        <input type="date" id="test_date" name="test_date" required>
+                    </div>
+
+                    <!-- 能力検査 -->
+                    <div class="form-section">
+                        <h3>🧠 能力検査（100点満点）</h3>
+                        <div class="score-grid">
+                            <div class="form-group">
+                                <label>言語能力</label>
+                                <div class="score-input">
+                                    <input type="range" id="verbal_score" name="verbal_score" 
+                                           min="0" max="100" value="50">
+                                    <span class="score-value" id="verbal_value">50</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>数理能力</label>
+                                <div class="score-input">
+                                    <input type="range" id="numerical_score" name="numerical_score" 
+                                           min="0" max="100" value="50">
+                                    <span class="score-value" id="numerical_value">50</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>論理的思考</label>
+                                <div class="score-input">
+                                    <input type="range" id="logical_score" name="logical_score" 
+                                           min="0" max="100" value="50">
+                                    <span class="score-value" id="logical_value">50</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 性格検査 -->
+                    <div class="form-section">
+                        <h3>🎯 性格検査（5段階評価）</h3>
+                        <div class="score-grid">
+                            <div class="form-group">
+                                <label>リーダーシップ</label>
+                                <div class="score-input">
+                                    <input type="range" id="leadership_score" name="leadership_score" 
+                                           min="1" max="5" value="3">
+                                    <span class="score-value" id="leadership_value">3</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>協調性</label>
+                                <div class="score-input">
+                                    <input type="range" id="cooperation_score" name="cooperation_score" 
+                                           min="1" max="5" value="3">
+                                    <span class="score-value" id="cooperation_value">3</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>ストレス耐性</label>
+                                <div class="score-input">
+                                    <input type="range" id="stress_resistance_score" name="stress_resistance_score" 
+                                           min="1" max="5" value="3">
+                                    <span class="score-value" id="stress_value">3</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 総合判定 -->
+                    <div class="form-section">
+                        <h3>✅ 総合判定</h3>
+                        <div class="result-options">
+                            <button type="button" class="result-btn" data-value="excellent">
+                                🌟 優秀<br>
+                                <small>即戦力として期待</small>
+                            </button>
+                            <button type="button" class="result-btn" data-value="good">
+                                👍 良好<br>
+                                <small>十分な適性あり</small>
+                            </button>
+                            <button type="button" class="result-btn" data-value="average">
+                                📊 標準<br>
+                                <small>育成次第で活躍可能</small>
+                            </button>
+                            <button type="button" class="result-btn" data-value="below_average">
+                                ⚠️ 要検討<br>
+                                <small>慎重な判断が必要</small>
+                            </button>
+                        </div>
+                        <input type="hidden" id="overall_result" name="overall_result">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">備考・所見</label>
+                        <textarea id="notes" name="notes" rows="4" 
+                                  placeholder="検査中の様子、特記事項など"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">結果を登録</button>
+                </form>
+
+                <div id="noSelectionMessage" style="text-align: center; color: #999; padding: 40px 0;">
+                    左側から候補者を選択してください
+                </div>
+
+                <!-- 結果サマリー -->
+                <div id="resultSummary" class="result-summary">
+                    <h3>📊 検査結果サマリー</h3>
+                    <div id="summaryContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let selectedCandidate = null;
+
+        // 候補者リストの読み込み
+        async function loadCandidates() {
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates`);
+                const data = await response.json();
+                
+                const aptitudeCandidates = data.candidates.filter(c => 
+                    c.current_stage === '適性検査' && c.stage_status === 'in_progress'
+                );
+                
+                displayCandidates(aptitudeCandidates);
+            } catch (error) {
+                document.getElementById('candidatesList').innerHTML = 
+                    '<p style="color: red;">エラー: ' + error.message + '</p>';
+            }
+        }
+
+        // 候補者リストの表示
+        function displayCandidates(candidates) {
+            if (candidates.length === 0) {
+                document.getElementById('candidatesList').innerHTML = 
+                    '<p>適性検査段階の候補者がいません</p>';
+                return;
+            }
+
+            const html = candidates.map(c => `
+                <div class="candidate-item" onclick="selectCandidate(${c.id}, '${c.last_name} ${c.first_name}')">
+                    <strong>${c.last_name} ${c.first_name}</strong>
+                    <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
+                        ${c.position_title || '未設定'}
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('candidatesList').innerHTML = html;
+        }
+
+        // 候補者選択
+        async function selectCandidate(candidateId, candidateName) {
+            selectedCandidate = { id: candidateId, name: candidateName };
+            
+            // 選択状態の更新
+            document.querySelectorAll('.candidate-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+            
+            // フォームの表示
+            document.getElementById('candidate_id').value = candidateId;
+            document.getElementById('aptitudeTestForm').style.display = 'block';
+            document.getElementById('noSelectionMessage').style.display = 'none';
+            
+            // 過去の結果を取得
+            loadTestResults(candidateId);
+        }
+
+        // 過去の結果読み込み
+        async function loadTestResults(candidateId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/aptitude-tests/candidate/${candidateId}`);
+                const data = await response.json();
+                
+                if (data.results && data.results.length > 0) {
+                    displayResultSummary(data);
+                } else {
+                    document.getElementById('resultSummary').classList.remove('show');
+                }
+            } catch (error) {
+                console.error('Error loading test results:', error);
+            }
+        }
+
+        // 結果サマリー表示
+        function displayResultSummary(data) {
+            const latest = data.results[0];
+            const summaryHTML = `
+                <p><strong>前回実施日:</strong> ${new Date(latest.test_date).toLocaleDateString('ja-JP')}</p>
+                <div style="margin-top: 10px;">
+                    <strong>能力検査平均:</strong> ${data.summary.ability_average}点
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${data.summary.ability_average}%"></div>
+                    </div>
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>性格検査平均:</strong> ${data.summary.personality_average}/5.0
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${data.summary.personality_average * 20}%"></div>
+                    </div>
+                </div>
+                <p style="margin-top: 10px;"><strong>前回の総合判定:</strong> ${getResultText(latest.overall_result)}</p>
+            `;
+            
+            document.getElementById('summaryContent').innerHTML = summaryHTML;
+            document.getElementById('resultSummary').classList.add('show');
+        }
+
+        // 判定テキスト変換
+        function getResultText(result) {
+            const texts = {
+                'excellent': '🌟 優秀',
+                'good': '👍 良好',
+                'average': '📊 標準',
+                'below_average': '⚠️ 要検討'
+            };
+            return texts[result] || '-';
+        }
+
+        // スコアスライダーの値表示（能力検査）
+        ['verbal', 'numerical', 'logical'].forEach(type => {
+            const slider = document.getElementById(`${type}_score`);
+            const value = document.getElementById(`${type}_value`);
+            
+            slider.addEventListener('input', (e) => {
+                value.textContent = e.target.value;
+            });
+        });
+
+        // スコアスライダーの値表示（性格検査）
+        ['leadership', 'cooperation', 'stress_resistance'].forEach(type => {
+            const slider = document.getElementById(`${type}_score`);
+            const valueId = type === 'stress_resistance' ? 'stress_value' : `${type}_value`;
+            const value = document.getElementById(valueId);
+            
+            slider.addEventListener('input', (e) => {
+                value.textContent = e.target.value;
+            });
+        });
+
+        // 総合判定ボタン
+        document.querySelectorAll('.result-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.result-btn').forEach(b => 
+                    b.classList.remove('selected')
+                );
+                e.currentTarget.classList.add('selected');
+                document.getElementById('overall_result').value = e.currentTarget.dataset.value;
+            });
+        });
+
+        // フォーム送信
+        document.getElementById('aptitudeTestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // 数値変換
+            ['verbal_score', 'numerical_score', 'logical_score'].forEach(field => {
+                if (data[field]) data[field] = parseInt(data[field]);
+            });
+            ['leadership_score', 'cooperation_score', 'stress_resistance_score'].forEach(field => {
+                if (data[field]) data[field] = parseInt(data[field]);
+            });
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/aptitude-tests`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', '適性検査結果が登録されました');
+                    
+                    // 能力検査の平均を計算
+                    const abilityAvg = (data.verbal_score + data.numerical_score + data.logical_score) / 3;
+                    
+                    // 基準値（70点以上なら合格推奨）
+                    if (abilityAvg >= 70 || data.overall_result === 'excellent' || data.overall_result === 'good') {
+                        if (confirm('この候補者を次のステージ（最終面接）に進めますか？')) {
+                            await advanceStage(selectedCandidate.id, 'pass');
+                        }
+                    }
+                    
+                    // フォームリセット
+                    resetForm();
+                    loadCandidates();
+                } else {
+                    showAlert('error', result.error || 'エラーが発生しました');
+                }
+            } catch (error) {
+                showAlert('error', 'ネットワークエラー: ' + error.message);
+            }
+        });
+
+        // ステージ進行
+        async function advanceStage(candidateId, action) {
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates/${candidateId}/advance-stage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', result.message);
+                }
+            } catch (error) {
+                console.error('Error advancing stage:', error);
+            }
+        }
+
+        // フォームリセット
+        function resetForm() {
+            document.getElementById('aptitudeTestForm').reset();
+            // スライダーをリセット
+            ['verbal', 'numerical', 'logical'].forEach(type => {
+                document.getElementById(`${type}_score`).value = 50;
+                document.getElementById(`${type}_value`).textContent = 50;
+            });
+            ['leadership', 'cooperation', 'stress_resistance'].forEach(type => {
+                const slider = document.getElementById(`${type}_score`);
+                const valueId = type === 'stress_resistance' ? 'stress_value' : `${type}_value`;
+                slider.value = 3;
+                document.getElementById(valueId).textContent = 3;
+            });
+            document.querySelectorAll('.result-btn').forEach(b => 
+                b.classList.remove('selected')
+            );
+            document.getElementById('resultSummary').classList.remove('show');
+        }
+
+        // アラート表示
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // 今日の日付をデフォルト設定
+        document.getElementById('test_date').valueAsDate = new Date();
+
+        // 初期読み込み
+        loadCandidates();
+    </script>
+    <script src="navigation.js"></script>
+</body>
+</html>

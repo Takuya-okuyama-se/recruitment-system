@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # pgAdmin専用の設定
+  pgadmin:
+    image: dpage/pgadmin4:7.8
+    container_name: sunstar_pgadmin_new
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@sunstar.com
+      PGADMIN_DEFAULT_PASSWORD: sunstar123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5051:80"
+    networks:
+      - sunstar-recruitment-tracker_app_network
+    restart: unless-stopped
+
+networks:
+  sunstar-recruitment-tracker_app_network:
+    external: true

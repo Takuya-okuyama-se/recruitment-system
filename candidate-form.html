@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>候補者登録 - 採用管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF6B35;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #FF6B35;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        button {
+            background-color: #FF6B35;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #e55a2b;
+        }
+        .btn {
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .btn:hover {
+            background-color: #5a6268;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .candidates-list {
+            margin-top: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .stage-書類選考 { background-color: #e3f2fd; color: #1976d2; }
+        .stage-一次面接 { background-color: #f3e5f5; color: #7b1fa2; }
+        .stage-適性検査 { background-color: #fff3e0; color: #f57c00; }
+        .stage-最終面接 { background-color: #e8f5e9; color: #388e3c; }
+        .stage-内定 { background-color: #fce4ec; color: #c2185b; }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-small {
+            padding: 5px 15px;
+            font-size: 14px;
+        }
+        
+        /* Responsive Design */
+        /* Mobile styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+            .form-container {
+                padding: 20px;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            input, select, textarea {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+                margin-right: 0;
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+                display: block;
+            }
+            .action-buttons {
+                flex-direction: column;
+            }
+            .btn-small {
+                width: 100%;
+                margin: 5px 0;
+            }
+            /* Navigation responsive */
+            nav > div > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            nav a {
+                margin: 2px 0 !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            nav span {
+                display: none !important;
+            }
+            /* Table responsive */
+            .candidates-list {
+                padding: 10px;
+                overflow-x: auto;
+            }
+            table {
+                min-width: 600px;
+            }
+        }
+        
+        /* Tablet styles (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .container {
+                max-width: 95%;
+            }
+            .form-container {
+                padding: 25px;
+            }
+        }
+        
+        /* Ensure minimum font size for readability */
+        @media (max-width: 1199px) {
+            body {
+                min-font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
+                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
+                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
+                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
+                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
+                <span style="color: white; margin: 0 10px;">|</span>
+                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
+                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
+                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
+                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>👥 候補者登録・管理</h1>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="dashboard.html" class="btn">📊 ダッシュボードへ戻る</a>
+            <a href="evaluation-form.html" class="btn">📝 面接評価</a>
+            <a href="aptitude-test-form.html" class="btn">📋 適性検査</a>
+            <a href="index.html" class="btn">🏠 メインページ</a>
+        </div>
+        
+        <div id="alertContainer"></div>
+        
+        <div class="form-container">
+            <h2>新規候補者登録</h2>
+            <form id="candidateForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="last_name">姓 *</label>
+                        <input type="text" id="last_name" name="last_name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="first_name">名 *</label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email">メールアドレス *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">電話番号</label>
+                        <input type="tel" id="phone" name="phone" placeholder="090-1234-5678">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="current_company">現在の勤務先</label>
+                        <input type="text" id="current_company" name="current_company">
+                    </div>
+                    <div class="form-group">
+                        <label for="years_of_experience">経験年数</label>
+                        <input type="number" id="years_of_experience" name="years_of_experience" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="applied_position_id">応募職種 *</label>
+                    <select id="applied_position_id" name="applied_position_id" required>
+                        <option value="">選択してください</option>
+                        <option value="1">研究開発エンジニア</option>
+                        <option value="2">品質管理責任者</option>
+                        <option value="3">生産技術マネージャー</option>
+                        <option value="4">マーケティング担当</option>
+                        <option value="5">人事総務スタッフ</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="source">応募経路</label>
+                    <select id="source" name="source">
+                        <option value="">選択してください</option>
+                        <option value="リクルーター">リクルーター</option>
+                        <option value="転職サイト">転職サイト</option>
+                        <option value="自社サイト">自社サイト</option>
+                        <option value="社員紹介">社員紹介</option>
+                        <option value="その他">その他</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="education">学歴</label>
+                        <textarea id="education" name="education" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="languages">言語スキル</label>
+                        <textarea id="languages" name="languages" rows="3" placeholder="例: 日本語（ネイティブ）、英語（ビジネス）"></textarea>
+                    </div>
+                </div>
+                
+                <div>
+                    <button type="submit">登録</button>
+                    <button type="button" class="btn-secondary" onclick="resetForm()">クリア</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="candidates-list">
+            <h2>登録済み候補者一覧</h2>
+            <div id="candidatesTable">
+                <p>読み込み中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+
+        // フォーム送信処理
+        document.getElementById('candidateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            // 数値フィールドの変換
+            if (data.years_of_experience) {
+                data.years_of_experience = parseInt(data.years_of_experience);
+            }
+            data.applied_position_id = parseInt(data.applied_position_id);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', '候補者が正常に登録されました');
+                    resetForm();
+                    loadCandidates();
+                } else {
+                    showAlert('error', result.error || 'エラーが発生しました');
+                }
+            } catch (error) {
+                showAlert('error', 'ネットワークエラー: ' + error.message);
+            }
+        });
+
+        // 候補者一覧の読み込み
+        async function loadCandidates() {
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates`);
+                const data = await response.json();
+                
+                if (data.candidates && data.candidates.length > 0) {
+                    displayCandidates(data.candidates);
+                } else {
+                    document.getElementById('candidatesTable').innerHTML = '<p>候補者が登録されていません</p>';
+                }
+            } catch (error) {
+                document.getElementById('candidatesTable').innerHTML = '<p>読み込みエラー: ' + error.message + '</p>';
+            }
+        }
+
+        // 候補者一覧の表示
+        function displayCandidates(candidates) {
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>氏名</th>
+                            <th>メール</th>
+                            <th>応募職種</th>
+                            <th>現在のステージ</th>
+                            <th>登録日</th>
+                            <th>アクション</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${candidates.map(c => `
+                            <tr>
+                                <td>${c.last_name} ${c.first_name}</td>
+                                <td>${c.email}</td>
+                                <td>${c.position_title || '未設定'}</td>
+                                <td><span class="stage-badge stage-${c.current_stage || '書類選考'}">${c.current_stage || '書類選考'}</span></td>
+                                <td>${new Date(c.created_at).toLocaleDateString('ja-JP')}</td>
+                                <td class="action-buttons">
+                                    <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
+                                    <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('candidatesTable').innerHTML = html;
+        }
+
+        // ステージ進行
+        async function advanceStage(candidateId, action) {
+            if (!confirm(`この候補者を${action === 'pass' ? '次のステージに進めます' : '不合格にします'}か？`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/candidates/${candidateId}/advance-stage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert('success', result.message);
+                    loadCandidates();
+                } else {
+                    showAlert('error', result.error || 'エラーが発生しました');
+                }
+            } catch (error) {
+                showAlert('error', 'ネットワークエラー: ' + error.message);
+            }
+        }
+
+        // アラート表示
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            const container = document.getElementById('alertContainer');
+            container.innerHTML = '';
+            container.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        // フォームリセット
+        function resetForm() {
+            document.getElementById('candidateForm').reset();
+        }
+
+        // 初期読み込み
+        loadCandidates();
+    </script>
+    <script src="navigation.js"></script>
+</body>
+</html>

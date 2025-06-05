@@ -1,0 +1,43 @@
+services:
+  # Webサービス（Node.js アプリケーション）
+  - type: web
+    name: recruitment-system-app
+    env: docker
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: recruitment-system-db
+          property: connectionString
+      - key: DB_HOST
+        fromDatabase:
+          name: recruitment-system-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: recruitment-system-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: recruitment-system-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: recruitment-system-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: recruitment-system-db
+          property: password
+
+databases:
+  # PostgreSQLデータベース
+  - name: recruitment-system-db
+    databaseName: recruitment_system
+    user: recruitment_user
+    plan: free # 無料プラン（開発用）
+    # 本番環境では plan: starter または standard を推奨

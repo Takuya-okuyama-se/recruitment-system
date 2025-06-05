@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # PostgreSQLデータベース（セキュア設定）
+  postgres:
+    image: postgres:15-alpine
+    container_name: sunstar_db_secure
+    environment:
+      POSTGRES_DB: sunstar_recruitment
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      # SSL有効化
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/secure-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./security/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./security/pg_hba.conf:/etc/postgresql/pg_hba.conf
+      - ./security/ssl:/etc/postgresql/ssl:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - secure_network
+    command: >
+      postgres
+      -c ssl=on
+      -c ssl_cert_file=/etc/postgresql/ssl/server.crt
+      -c ssl_key_file=/etc/postgresql/ssl/server.key
+      -c ssl_ca_file=/etc/postgresql/ssl/ca.crt
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_statement=all
+      -c shared_preload_libraries='pg_stat_statements,pgaudit'
+
+  # アプリケーションサーバー
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.secure
+    container_name: sunstar_app_secure
+    environment:
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: sunstar_recruitment
+      DB_USER: ${APP_DB_USER}
+      DB_PASSWORD: ${APP_DB_PASSWORD}
+      DB_SSL: "true"
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      # セキュリティヘッダー設定
+      SECURE_HEADERS: "true"
+      HSTS_MAX_AGE: "31536000"
+      CSP_DIRECTIVES: "default-src 'self'"
+    volumes:
+      - ./src:/app/src:ro
+      - ./logs:/app/logs
+    ports:
+      - "5000:5000"
+    networks:
+      - secure_network
+    depends_on:
+      - postgres
+    user: "node:node"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+
+  # Nginx リバースプロキシ（SSL終端）
+  nginx:
+    image: nginx:alpine
+    container_name: sunstar_nginx_secure
+    volumes:
+      - ./security/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./security/ssl:/etc/nginx/ssl:ro
+    ports:
+      - "443:443"
+      - "80:80"
+    networks:
+      - secure_network
+    depends_on:
+      - app
+
+  # Redis（セッション管理用）
+  redis:
+    image: redis:7-alpine
+    container_name: sunstar_redis_secure
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - secure_network
+
+  # バックアップサービス
+  backup:
+    image: postgres:15-alpine
+    container_name: sunstar_backup
+    environment:
+      PGPASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./backups:/backups
+      - ./security/backup.sh:/backup.sh:ro
+    networks:
+      - secure_network
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["chmod +x /backup.sh && crond -f"]
+
+networks:
+  secure_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data/postgres
+  redis_data:
+    driver: local

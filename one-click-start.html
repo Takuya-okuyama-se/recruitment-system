@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>採用管理システム - スタートページ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'メイリオ', 'Meiryo', 'ヒラギノ角ゴ Pro W3', sans-serif;
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            padding: 60px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            color: #FF6B35;
+            font-size: 32px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        
+        .start-button {
+            display: inline-block;
+            background: #FF6B35;
+            color: white;
+            padding: 20px 80px;
+            font-size: 24px;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255,107,53,0.3);
+            font-weight: bold;
+        }
+        
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(255,107,53,0.4);
+            background: #F7931E;
+        }
+        
+        .start-button:active {
+            transform: translateY(-1px);
+        }
+        
+        .features {
+            margin-top: 50px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .feature-text {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .info {
+            margin-top: 40px;
+            padding: 20px;
+            background: #fff3cd;
+            border-radius: 10px;
+            color: #856404;
+        }
+        
+        .info h3 {
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .info p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        
+        .support {
+            margin-top: 30px;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .support a {
+            color: #FF6B35;
+            text-decoration: none;
+        }
+        
+        .support a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 40px 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+            
+            .start-button {
+                padding: 15px 50px;
+                font-size: 20px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🌟</div>
+        <h1>採用管理システム</h1>
+        <p class="subtitle">採用プロセスを効率的に管理</p>
+        
+        <!-- メインのスタートボタン -->
+        <a href="http://localhost:5000/dashboard.html" class="start-button" id="startBtn">
+            システムを開始する
+        </a>
+        
+        <!-- 機能紹介 -->
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <div class="feature-text">採用状況を<br>リアルタイム把握</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">👥</div>
+                <div class="feature-text">候補者情報を<br>一元管理</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <div class="feature-text">面接評価を<br>簡単入力</div>
+            </div>
+        </div>
+        
+        <!-- アクセス情報 -->
+        <div class="info">
+            <h3>📌 アクセス情報</h3>
+            <p><strong>URL:</strong> <span id="systemUrl">http://localhost:5000/dashboard.html</span></p>
+            <p><strong>推奨ブラウザ:</strong> Google Chrome、Microsoft Edge（最新版）</p>
+            <p><strong>初回ログイン:</strong> 管理者から提供された情報をご利用ください</p>
+        </div>
+        
+        <!-- サポート情報 -->
+        <div class="support">
+            <p>お困りの場合は <a href="mailto:support@example.com">サポート</a> までご連絡ください</p>
+            <p>営業時間: 平日 9:00-18:00</p>
+        </div>
+    </div>
+    
+    <script>
+        // 本番環境のURLに置き換える場合はここを変更
+        const PRODUCTION_URL = 'https://recruitment-system.onrender.com/dashboard.html';
+        const LOCAL_URL = 'http://localhost:5000/dashboard.html';
+        
+        // 環境に応じてURLを設定
+        const isProduction = false; // 本番環境の場合はtrueに変更
+        const systemUrl = isProduction ? PRODUCTION_URL : LOCAL_URL;
+        
+        // URLを更新
+        document.getElementById('startBtn').href = systemUrl;
+        document.getElementById('systemUrl').textContent = systemUrl;
+        
+        // ページを開いたことを記録（オプション）
+        if (typeof(Storage) !== "undefined") {
+            const visits = localStorage.getItem('systemVisits') || 0;
+            localStorage.setItem('systemVisits', parseInt(visits) + 1);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>組織・採用設定 - 採用管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF6B35;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 5px;
+            font-size: 16px;
+        }
+        .btn-primary {
+            background-color: #FF6B35;
+        }
+        .btn-success {
+            background-color: #28a745;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 14px;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #FF6B35;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #495057;
+            font-weight: 500;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #FF6B35;
+            box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.2);
+        }
+        .department-list, .position-list {
+            margin-top: 20px;
+        }
+        .list-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #dee2e6;
+        }
+        .list-item:hover {
+            background: #e9ecef;
+        }
+        .item-info {
+            flex: 1;
+        }
+        .item-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .item-details {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .position-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .position-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+        .position-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 18px;
+        }
+        .position-department {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .position-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .detail-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .detail-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        .detail-value {
+            font-weight: 600;
+            color: #333;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-title {
+            color: #333;
+            font-size: 20px;
+            font-weight: 600;
+        }
+        .close {
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #999;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .alert-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FF6B35;
+        }
+        .stat-label {
+            color: #6c757d;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .requirements-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .target-input {
+            width: 80px;
+            text-align: center;
+        }
+        
+        /* Responsive Design */
+        /* Mobile styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .section {
+                padding: 20px;
+            }
+            .section h2 {
+                font-size: 1.2em;
+            }
+            .form-group {
+                margin-bottom: 15px;
+            }
+            .form-control {
+                font-size: 16px; /* Prevents zoom on iOS */
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+                display: block;
+            }
+            .btn-sm {
+                padding: 8px 12px;
+            }
+            .item-actions {
+                flex-direction: column;
+                gap: 5px;
+            }
+            .item-actions .btn {
+                width: auto;
+                margin: 0;
+            }
+            .position-details {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .stats-summary {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .stat-number {
+                font-size: 2em;
+            }
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+            /* Navigation responsive */
+            nav > div > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            nav a {
+                margin: 2px 0 !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            nav span {
+                display: none !important;
+            }
+            .nav-buttons {
+                margin-bottom: 20px;
+            }
+            .list-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .item-info {
+                margin-bottom: 10px;
+            }
+        }
+        
+        /* Tablet styles (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .container {
+                max-width: 95%;
+            }
+            .grid-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .position-details {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* Ensure minimum font size for readability */
+        @media (max-width: 1199px) {
+            body {
+                min-font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
+                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
+                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
+                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
+                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
+                <span style="color: white; margin: 0 10px;">|</span>
+                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
+                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
+                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
+                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>🏢 組織・採用設定</h1>
+        
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="btn btn-primary">📊 ダッシュボードへ戻る</a>
+            <a href="data-management.html" class="btn">📊 データ管理</a>
+            <a href="candidate-form.html" class="btn">👥 候補者管理</a>
+        </div>
+
+        <div id="alertMessage"></div>
+
+        <!-- 統計サマリー -->
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-number" id="totalDepartments">0</div>
+                <div class="stat-label">部門数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalPositions">0</div>
+                <div class="stat-label">募集職種数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalTarget">0</div>
+                <div class="stat-label">総採用予定数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalHired">0</div>
+                <div class="stat-label">採用済み</div>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <!-- 部門管理 -->
+            <div class="section">
+                <h2>部門管理</h2>
+                <button class="btn btn-success" onclick="showDepartmentModal()">
+                    ➕ 新規部門追加
+                </button>
+                <div class="department-list" id="departmentList">
+                    <p>読み込み中...</p>
+                </div>
+            </div>
+
+            <!-- 職種管理 -->
+            <div class="section">
+                <h2>職種・採用予定数管理</h2>
+                <button class="btn btn-success" onclick="showPositionModal()">
+                    ➕ 新規職種追加
+                </button>
+                <div class="position-list" id="positionList">
+                    <p>読み込み中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 部門追加/編集モーダル -->
+    <div id="departmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="departmentModalTitle">部門を追加</h3>
+                <span class="close" onclick="closeDepartmentModal()">&times;</span>
+            </div>
+            <form id="departmentForm">
+                <input type="hidden" id="departmentId">
+                <div class="form-group">
+                    <label for="departmentName">部門名 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-control" id="departmentName" required>
+                </div>
+                <div class="form-group">
+                    <label for="departmentCode">部門コード</label>
+                    <input type="text" class="form-control" id="departmentCode" placeholder="例: RD, QA, MKT">
+                </div>
+                <div class="form-group">
+                    <label for="departmentDescription">説明</label>
+                    <textarea class="form-control" id="departmentDescription" rows="3"></textarea>
+                </div>
+                <div style="text-align: right;">
+                    <button type="button" class="btn" onclick="closeDepartmentModal()">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 職種追加/編集モーダル -->
+    <div id="positionModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="positionModalTitle">職種を追加</h3>
+                <span class="close" onclick="closePositionModal()">&times;</span>
+            </div>
+            <form id="positionForm">
+                <input type="hidden" id="positionId">
+                <div class="form-group">
+                    <label for="positionDepartment">所属部門 <span style="color: red;">*</span></label>
+                    <select class="form-control" id="positionDepartment" required>
+                        <option value="">部門を選択してください</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="positionTitle">職種名 <span style="color: red;">*</span></label>
+                    <input type="text" class="form-control" id="positionTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="positionRequirements">応募要件</label>
+                    <textarea class="form-control requirements-field" id="positionRequirements" 
+                        placeholder="必須スキル、経験年数、資格など"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="positionTarget">採用予定人数 <span style="color: red;">*</span></label>
+                    <input type="number" class="form-control target-input" id="positionTarget" 
+                        min="1" max="99" value="1" required>
+                </div>
+                <div style="text-align: right;">
+                    <button type="button" class="btn" onclick="closePositionModal()">キャンセル</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let departments = [];
+        let positions = [];
+
+        // ページ読み込み時
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDepartments();
+            loadPositions();
+            loadStats();
+        });
+
+        // 統計情報の読み込み
+        async function loadStats() {
+            try {
+                // 部門データから統計を取得
+                const deptRes = await fetch(`${API_BASE}/api/recruitment/by-department`);
+                const deptData = await deptRes.json();
+                
+                document.getElementById('totalDepartments').textContent = deptData.length;
+                
+                const totalTarget = deptData.reduce((sum, dept) => sum + (dept.target_hires || 0), 0);
+                const totalHired = deptData.reduce((sum, dept) => sum + (dept.hired || 0), 0);
+                const totalPositions = deptData.reduce((sum, dept) => sum + (dept.open_positions || 0), 0);
+                
+                document.getElementById('totalTarget').textContent = totalTarget;
+                document.getElementById('totalHired').textContent = totalHired;
+                document.getElementById('totalPositions').textContent = totalPositions;
+                
+            } catch (error) {
+                console.error('統計情報の読み込みエラー:', error);
+            }
+        }
+
+        // 部門一覧の読み込み
+        async function loadDepartments() {
+            try {
+                const response = await fetch(`${API_BASE}/api/organization/departments`);
+                if (!response.ok) {
+                    // APIがまだない場合はデフォルトデータを使用
+                    departments = [
+                        { id: 1, name: '研究開発本部', code: 'RD' },
+                        { id: 2, name: '生産技術部', code: 'PT' },
+                        { id: 3, name: '品質保証部', code: 'QA' },
+                        { id: 4, name: 'マーケティング部', code: 'MKT' },
+                        { id: 5, name: '人事総務部', code: 'HR' }
+                    ];
+                } else {
+                    departments = await response.json();
+                }
+                
+                displayDepartments();
+                updateDepartmentSelect();
+                
+            } catch (error) {
+                console.error('部門データの読み込みエラー:', error);
+                // デフォルトデータを表示
+                departments = [
+                    { id: 1, name: '研究開発本部', code: 'RD' },
+                    { id: 2, name: '生産技術部', code: 'PT' },
+                    { id: 3, name: '品質保証部', code: 'QA' },
+                    { id: 4, name: 'マーケティング部', code: 'MKT' },
+                    { id: 5, name: '人事総務部', code: 'HR' }
+                ];
+                displayDepartments();
+                updateDepartmentSelect();
+            }
+        }
+
+        // 部門一覧の表示
+        function displayDepartments() {
+            const listContainer = document.getElementById('departmentList');
+            
+            if (departments.length === 0) {
+                listContainer.innerHTML = '<p>部門が登録されていません</p>';
+                return;
+            }
+            
+            const html = departments.map(dept => `
+                <div class="list-item">
+                    <div class="item-info">
+                        <div class="item-name">${dept.name}</div>
+                        <div class="item-details">
+                            ${dept.code ? `コード: ${dept.code}` : ''}
+                            ${dept.position_count ? ` | ${dept.position_count}職種` : ''}
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-warning btn-sm" onclick="editDepartment(${dept.id})">編集</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteDepartment(${dept.id})">削除</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            listContainer.innerHTML = html;
+        }
+
+        // 職種一覧の読み込み
+        async function loadPositions() {
+            try {
+                const response = await fetch(`${API_BASE}/api/organization/positions`);
+                if (!response.ok) {
+                    // APIがまだない場合はデフォルトデータを使用
+                    positions = [
+                        { id: 1, department_id: 1, department_name: '研究開発本部', title: '研究開発エンジニア', target_count: 3 },
+                        { id: 2, department_id: 3, department_name: '品質保証部', title: '品質管理責任者', target_count: 1 },
+                        { id: 3, department_id: 2, department_name: '生産技術部', title: '生産技術マネージャー', target_count: 2 }
+                    ];
+                } else {
+                    positions = await response.json();
+                }
+                
+                displayPositions();
+                
+            } catch (error) {
+                console.error('職種データの読み込みエラー:', error);
+                positions = [];
+                displayPositions();
+            }
+        }
+
+        // 職種一覧の表示
+        function displayPositions() {
+            const listContainer = document.getElementById('positionList');
+            
+            if (positions.length === 0) {
+                listContainer.innerHTML = '<p>募集職種が登録されていません</p>';
+                return;
+            }
+            
+            const html = positions.map(pos => `
+                <div class="position-card">
+                    <div class="position-header">
+                        <div>
+                            <div class="position-title">${pos.title}</div>
+                            <div class="position-department">${pos.department_name || '未設定'}</div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="btn btn-warning btn-sm" onclick="editPosition(${pos.id})">編集</button>
+                            <button class="btn btn-danger btn-sm" onclick="deletePosition(${pos.id})">削除</button>
+                        </div>
+                    </div>
+                    <div class="position-details">
+                        <div class="detail-item">
+                            <div class="detail-label">採用予定数</div>
+                            <div class="detail-value">${pos.target_count || 0}名</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">現在の応募者数</div>
+                            <div class="detail-value">${pos.applicant_count || 0}名</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">採用済み</div>
+                            <div class="detail-value">${pos.hired_count || 0}名</div>
+                        </div>
+                    </div>
+                    ${pos.requirements ? `
+                        <div style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                            <div class="detail-label">応募要件</div>
+                            <div style="color: #495057; font-size: 14px; margin-top: 5px;">${pos.requirements}</div>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            listContainer.innerHTML = html;
+        }
+
+        // 部門選択肢の更新
+        function updateDepartmentSelect() {
+            const select = document.getElementById('positionDepartment');
+            const options = departments.map(dept => 
+                `<option value="${dept.id}">${dept.name}</option>`
+            ).join('');
+            select.innerHTML = '<option value="">部門を選択してください</option>' + options;
+        }
+
+        // 部門モーダル表示
+        function showDepartmentModal() {
+            document.getElementById('departmentModal').style.display = 'flex';
+            document.getElementById('departmentModalTitle').textContent = '部門を追加';
+            document.getElementById('departmentForm').reset();
+            document.getElementById('departmentId').value = '';
+        }
+
+        // 部門モーダルを閉じる
+        function closeDepartmentModal() {
+            document.getElementById('departmentModal').style.display = 'none';
+        }
+
+        // 職種モーダル表示
+        function showPositionModal() {
+            document.getElementById('positionModal').style.display = 'flex';
+            document.getElementById('positionModalTitle').textContent = '職種を追加';
+            document.getElementById('positionForm').reset();
+            document.getElementById('positionId').value = '';
+        }
+
+        // 職種モーダルを閉じる
+        function closePositionModal() {
+            document.getElementById('positionModal').style.display = 'none';
+        }
+
+        // 部門の編集
+        function editDepartment(id) {
+            const dept = departments.find(d => d.id === id);
+            if (!dept) return;
+            
+            document.getElementById('departmentId').value = dept.id;
+            document.getElementById('departmentName').value = dept.name;
+            document.getElementById('departmentCode').value = dept.code || '';
+            document.getElementById('departmentDescription').value = dept.description || '';
+            document.getElementById('departmentModalTitle').textContent = '部門を編集';
+            document.getElementById('departmentModal').style.display = 'flex';
+        }
+
+        // 職種の編集
+        function editPosition(id) {
+            const pos = positions.find(p => p.id === id);
+            if (!pos) return;
+            
+            document.getElementById('positionId').value = pos.id;
+            document.getElementById('positionDepartment').value = pos.department_id;
+            document.getElementById('positionTitle').value = pos.title;
+            document.getElementById('positionRequirements').value = pos.requirements || '';
+            document.getElementById('positionTarget').value = pos.target_count || 1;
+            document.getElementById('positionModalTitle').textContent = '職種を編集';
+            document.getElementById('positionModal').style.display = 'flex';
+        }
+
+        // 部門フォームの送信
+        document.getElementById('departmentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('departmentId').value;
+            const data = {
+                name: document.getElementById('departmentName').value,
+                code: document.getElementById('departmentCode').value,
+                description: document.getElementById('departmentDescription').value
+            };
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? 
+                    `${API_BASE}/api/organization/departments/${id}` : 
+                    `${API_BASE}/api/organization/departments`;
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('部門の保存に失敗しました');
+                }
+                
+                showAlert('success', '部門を保存しました');
+                closeDepartmentModal();
+                loadDepartments();
+                loadStats();
+                
+            } catch (error) {
+                console.error('エラー:', error);
+                showAlert('error', '部門の保存に失敗しました');
+            }
+        });
+
+        // 職種フォームの送信
+        document.getElementById('positionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('positionId').value;
+            const data = {
+                department_id: parseInt(document.getElementById('positionDepartment').value),
+                title: document.getElementById('positionTitle').value,
+                requirements: document.getElementById('positionRequirements').value,
+                target_count: parseInt(document.getElementById('positionTarget').value)
+            };
+            
+            try {
+                const method = id ? 'PUT' : 'POST';
+                const url = id ? 
+                    `${API_BASE}/api/organization/positions/${id}` : 
+                    `${API_BASE}/api/organization/positions`;
+                
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('職種の保存に失敗しました');
+                }
+                
+                showAlert('success', '職種を保存しました');
+                closePositionModal();
+                loadPositions();
+                loadStats();
+                
+            } catch (error) {
+                console.error('エラー:', error);
+                showAlert('error', '職種の保存に失敗しました');
+            }
+        });
+
+        // 部門の削除
+        async function deleteDepartment(id) {
+            if (!confirm('この部門を削除してもよろしいですか？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/organization/departments/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('部門の削除に失敗しました');
+                }
+                
+                showAlert('success', '部門を削除しました');
+                loadDepartments();
+                loadStats();
+                
+            } catch (error) {
+                console.error('エラー:', error);
+                showAlert('error', '部門の削除に失敗しました');
+            }
+        }
+
+        // 職種の削除
+        async function deletePosition(id) {
+            if (!confirm('この職種を削除してもよろしいですか？')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/organization/positions/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('職種の削除に失敗しました');
+                }
+                
+                showAlert('success', '職種を削除しました');
+                loadPositions();
+                loadStats();
+                
+            } catch (error) {
+                console.error('エラー:', error);
+                showAlert('error', '職種の削除に失敗しました');
+            }
+        }
+
+        // アラート表示
+        function showAlert(type, message) {
+            const alertDiv = document.getElementById('alertMessage');
+            alertDiv.innerHTML = `
+                <div class="alert alert-${type}">
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => {
+                alertDiv.innerHTML = '';
+            }, 5000);
+        }
+
+        // モーダルの外側クリックで閉じる
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+    </script>
+    <script src="navigation.js"></script>
+</body>
+</html>

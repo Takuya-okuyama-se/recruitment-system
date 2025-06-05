@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データベースビューアー - 採用管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FF6B35;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 5px;
+        }
+        .btn-primary {
+            background-color: #FF6B35;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .table-selector {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .table-btn {
+            padding: 15px 25px;
+            margin: 5px;
+            font-size: 1.1em;
+        }
+        .table-container {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #FF6B35;
+        }
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .error {
+            color: #dc3545;
+            text-align: center;
+            padding: 20px;
+        }
+        .stage-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+        .stage-書類選考 { background-color: #e3f2fd; color: #1976d2; }
+        .stage-一次面接 { background-color: #f3e5f5; color: #7b1fa2; }
+        .stage-適性検査 { background-color: #fff3e0; color: #f57c00; }
+        .stage-最終面接 { background-color: #e8f5e9; color: #388e3c; }
+        .stage-内定 { background-color: #fce4ec; color: #c2185b; }
+        
+        /* Responsive Design */
+        /* Mobile styles (max-width: 767px) */
+        @media (max-width: 767px) {
+            body {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .container {
+                max-width: 100%;
+            }
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 20px;
+            }
+            .stats {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                margin-bottom: 20px;
+            }
+            .stat-card {
+                padding: 15px;
+            }
+            .stat-number {
+                font-size: 2em;
+            }
+            .table-selector {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .table-btn {
+                width: 100%;
+                padding: 12px 20px;
+                margin: 0;
+                font-size: 1em;
+            }
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+                display: block;
+            }
+            .table-container {
+                padding: 15px;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            table {
+                min-width: 600px;
+            }
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
+            /* Navigation responsive */
+            nav > div > div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+            nav a {
+                margin: 2px 0 !important;
+                width: 100% !important;
+                text-align: center !important;
+            }
+            nav span {
+                display: none !important;
+            }
+            .nav-buttons {
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* Tablet styles (768px - 1199px) */
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .container {
+                max-width: 95%;
+            }
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .table-selector {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+        
+        /* Ensure minimum font size for readability */
+        @media (max-width: 1199px) {
+            body {
+                min-font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
+                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
+                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
+                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
+                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
+                <span style="color: white; margin: 0 10px;">|</span>
+                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
+                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
+                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
+                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>🗄️ データベースビューアー</h1>
+        
+        <div class="nav-buttons">
+            <a href="dashboard.html" class="btn btn-primary">📊 ダッシュボードへ戻る</a>
+        </div>
+
+        <div class="stats" id="statsContainer">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCandidates">-</div>
+                <div class="stat-label">総候補者数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalDepartments">-</div>
+                <div class="stat-label">部門数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalPositions">-</div>
+                <div class="stat-label">募集職種数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalEvaluations">-</div>
+                <div class="stat-label">評価件数</div>
+            </div>
+        </div>
+
+        <div class="table-selector">
+            <button class="btn btn-primary table-btn" onclick="loadTable('candidates')">👥 候補者</button>
+            <button class="btn table-btn" onclick="loadTable('departments')">🏢 部門</button>
+            <button class="btn table-btn" onclick="loadTable('positions')">💼 職種</button>
+            <button class="btn table-btn" onclick="loadTable('processes')">📋 採用プロセス</button>
+            <button class="btn table-btn" onclick="loadTable('evaluations')">📝 評価</button>
+        </div>
+
+        <div class="table-container">
+            <h2 id="tableTitle">データを選択してください</h2>
+            <div id="tableContent">
+                <p class="loading">上のボタンからテーブルを選択してください</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        
+        // エラーハンドリング付きのfetch関数
+        async function fetchWithRetry(url, retries = 2) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response;
+                } catch (error) {
+                    console.error(`Attempt ${i + 1} failed:`, error);
+                    if (i === retries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+            }
+        }
+
+        // 統計情報の読み込み
+        async function loadStats() {
+            try {
+                // APIサーバーの状態確認
+                console.log('APIサーバーに接続中...');
+                
+                // 候補者数
+                try {
+                    const candidatesRes = await fetchWithRetry(`${API_BASE}/api/candidates`);
+                    const candidatesData = await candidatesRes.json();
+                    document.getElementById('totalCandidates').textContent = candidatesData.total || '0';
+                    
+                    // 評価数（ダミー）
+                    document.getElementById('totalEvaluations').textContent = 
+                        Math.floor((candidatesData.total || 0) * 1.5) || '0';
+                } catch (error) {
+                    console.error('候補者データの取得に失敗:', error);
+                    document.getElementById('totalCandidates').textContent = 'エラー';
+                }
+
+                // 部門数
+                try {
+                    const deptRes = await fetchWithRetry(`${API_BASE}/api/recruitment/by-department`);
+                    const deptData = await deptRes.json();
+                    document.getElementById('totalDepartments').textContent = deptData.length || '0';
+
+                    // 職種数（部門データから計算）
+                    const totalPositions = deptData.reduce((sum, dept) => 
+                        sum + parseInt(dept.open_positions || 0), 0
+                    );
+                    document.getElementById('totalPositions').textContent = totalPositions;
+                } catch (error) {
+                    console.error('部門データの取得に失敗:', error);
+                    document.getElementById('totalDepartments').textContent = 'エラー';
+                    document.getElementById('totalPositions').textContent = 'エラー';
+                }
+
+            } catch (error) {
+                console.error('統計情報の読み込みエラー:', error);
+                // エラーメッセージを表示
+                showConnectionError();
+            }
+        }
+        
+        // 接続エラーの表示
+        function showConnectionError() {
+            const container = document.querySelector('.container');
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center;';
+            errorDiv.innerHTML = `
+                <strong>⚠️ APIサーバーに接続できません</strong><br>
+                以下のコマンドでサーバーを再起動してください：<br>
+                <code style="background: #fff; padding: 5px; border-radius: 3px;">sudo docker-compose restart app</code>
+            `;
+            container.insertBefore(errorDiv, container.firstChild);
+        }
+
+        // テーブルデータの読み込み
+        async function loadTable(tableName) {
+            const tableContent = document.getElementById('tableContent');
+            tableContent.innerHTML = '<p class="loading">データを読み込み中...</p>';
+
+            // ボタンのアクティブ状態を更新
+            document.querySelectorAll('.table-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                if (btn.textContent.includes(getTableLabel(tableName))) {
+                    btn.classList.add('btn-primary');
+                }
+            });
+
+            try {
+                let data = [];
+                let title = '';
+
+                switch (tableName) {
+                    case 'candidates':
+                        const candidatesRes = await fetch(`${API_BASE}/api/candidates`);
+                        const candidatesData = await candidatesRes.json();
+                        data = candidatesData.candidates || [];
+                        title = '候補者一覧';
+                        displayCandidates(data);
+                        break;
+
+                    case 'departments':
+                        const deptRes = await fetch(`${API_BASE}/api/recruitment/by-department`);
+                        data = await deptRes.json();
+                        title = '部門一覧';
+                        displayDepartments(data);
+                        break;
+
+                    case 'positions':
+                        title = '募集職種一覧';
+                        displayPositions();
+                        break;
+
+                    case 'processes':
+                        const processRes = await fetch(`${API_BASE}/api/candidates`);
+                        const processData = await processRes.json();
+                        data = processData.candidates || [];
+                        title = '採用プロセス状況';
+                        displayProcesses(data);
+                        break;
+
+                    case 'evaluations':
+                        title = '評価一覧';
+                        displayEvaluations();
+                        break;
+                }
+
+                document.getElementById('tableTitle').textContent = title;
+
+            } catch (error) {
+                tableContent.innerHTML = `<p class="error">エラー: ${error.message}</p>`;
+            }
+        }
+
+        // 候補者テーブル表示
+        function displayCandidates(candidates) {
+            if (candidates.length === 0) {
+                document.getElementById('tableContent').innerHTML = '<p>データがありません</p>';
+                return;
+            }
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>氏名</th>
+                            <th>メールアドレス</th>
+                            <th>応募職種</th>
+                            <th>現在のステージ</th>
+                            <th>応募日</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${candidates.map(c => `
+                            <tr>
+                                <td>${c.id}</td>
+                                <td><strong>${c.last_name} ${c.first_name}</strong></td>
+                                <td>${c.email}</td>
+                                <td>${c.position_title || '未設定'}</td>
+                                <td><span class="stage-badge stage-${c.current_stage || '書類選考'}">${c.current_stage || '書類選考'}</span></td>
+                                <td>${new Date(c.created_at).toLocaleDateString('ja-JP')}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        // 部門テーブル表示
+        function displayDepartments(departments) {
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>部門名</th>
+                            <th>募集職種数</th>
+                            <th>目標採用数</th>
+                            <th>応募者数</th>
+                            <th>採用決定数</th>
+                            <th>達成率</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${departments.map(d => {
+                            const rate = d.target_hires > 0 ? 
+                                Math.round((d.hired / d.target_hires) * 100) : 0;
+                            return `
+                                <tr>
+                                    <td><strong>${d.department}</strong></td>
+                                    <td>${d.open_positions}</td>
+                                    <td>${d.target_hires || 0}</td>
+                                    <td>${d.total_candidates}</td>
+                                    <td>${d.hired}</td>
+                                    <td>${rate}%</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        // 職種テーブル表示
+        function displayPositions() {
+            const positions = [
+                { id: 1, title: '研究開発エンジニア', department: '研究開発本部', target: 3 },
+                { id: 2, title: '品質管理責任者', department: '品質保証部', target: 1 },
+                { id: 3, title: '生産技術マネージャー', department: '生産技術部', target: 2 },
+                { id: 4, title: 'マーケティング担当', department: 'マーケティング部', target: 2 },
+                { id: 5, title: '人事総務スタッフ', department: '人事総務部', target: 1 }
+            ];
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>職種名</th>
+                            <th>所属部門</th>
+                            <th>目標採用数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${positions.map(p => `
+                            <tr>
+                                <td>${p.id}</td>
+                                <td><strong>${p.title}</strong></td>
+                                <td>${p.department}</td>
+                                <td>${p.target}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        // プロセステーブル表示
+        function displayProcesses(candidates) {
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>候補者名</th>
+                            <th>現在のステージ</th>
+                            <th>ステータス</th>
+                            <th>部門</th>
+                            <th>経過日数</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${candidates.map(c => {
+                            const days = Math.floor(Math.random() * 10) + 1;
+                            const status = c.stage_status === 'in_progress' ? '進行中' :
+                                         c.stage_status === 'passed' ? '合格' : '不合格';
+                            return `
+                                <tr>
+                                    <td><strong>${c.last_name} ${c.first_name}</strong></td>
+                                    <td><span class="stage-badge stage-${c.current_stage || '書類選考'}">${c.current_stage || '書類選考'}</span></td>
+                                    <td>${status}</td>
+                                    <td>${c.department_name || '未設定'}</td>
+                                    <td>${days}日</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        // 評価テーブル表示
+        function displayEvaluations() {
+            const evaluations = [
+                { candidate: '山田 太郎', stage: '一次面接', interviewer: '佐藤 部長', date: '2024-01-15', score: 4.2 },
+                { candidate: '鈴木 花子', stage: '最終面接', interviewer: '田中 役員', date: '2024-01-16', score: 4.5 },
+                { candidate: '高橋 一郎', stage: '適性検査', interviewer: 'システム', date: '2024-01-17', score: 3.8 }
+            ];
+
+            const html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>候補者名</th>
+                            <th>評価ステージ</th>
+                            <th>評価者</th>
+                            <th>評価日</th>
+                            <th>総合スコア</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${evaluations.map(e => `
+                            <tr>
+                                <td><strong>${e.candidate}</strong></td>
+                                <td>${e.stage}</td>
+                                <td>${e.interviewer}</td>
+                                <td>${e.date}</td>
+                                <td>${e.score}/5.0</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('tableContent').innerHTML = html;
+        }
+
+        // テーブルラベル取得
+        function getTableLabel(tableName) {
+            const labels = {
+                'candidates': '候補者',
+                'departments': '部門',
+                'positions': '職種',
+                'processes': 'プロセス',
+                'evaluations': '評価'
+            };
+            return labels[tableName] || tableName;
+        }
+
+        // 初期読み込み
+        loadStats();
+        loadTable('candidates');
+    </script>
+    <script src="navigation.js"></script>
+</body>
+</html>

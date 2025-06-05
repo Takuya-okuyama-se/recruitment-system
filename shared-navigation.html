@@ -1,0 +1,94 @@
+<!-- 共通ナビゲーション -->
+<style>
+    .unified-nav {
+        background-color: #FF6B35;
+        padding: 10px 0;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .unified-nav-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+    .unified-nav-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px;
+    }
+    .unified-nav-link {
+        background-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        text-decoration: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        transition: all 0.3s;
+        font-size: 13px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .unified-nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+    }
+    .unified-nav-link.active {
+        background-color: white;
+        color: #FF6B35;
+        font-weight: bold;
+    }
+    /* Responsive Design */
+    /* Mobile styles (max-width: 767px) */
+    @media (max-width: 767px) {
+        .unified-nav {
+            padding: 8px 0;
+        }
+        .unified-nav-container {
+            padding: 0 10px;
+        }
+        .unified-nav-links {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 2px;
+        }
+        .unified-nav-link {
+            width: 100%;
+            text-align: center;
+            font-size: 14px;
+            padding: 8px 12px;
+            justify-content: center;
+        }
+        .unified-nav-links > span {
+            display: none;
+        }
+    }
+    
+    /* Tablet styles (768px - 1199px) */
+    @media (min-width: 768px) and (max-width: 1199px) {
+        .unified-nav-links {
+            gap: 6px;
+        }
+        .unified-nav-link {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+    }
+</style>
+
+<nav class="unified-nav">
+    <div class="unified-nav-container">
+        <div class="unified-nav-links">
+            <a href="dashboard.html" class="unified-nav-link">📊 ダッシュボード</a>
+            <a href="candidate-form.html" class="unified-nav-link">👥 候補者管理</a>
+            <a href="evaluation-form.html" class="unified-nav-link">📝 面接評価</a>
+            <a href="aptitude-test-form.html" class="unified-nav-link">📋 適性検査</a>
+            <a href="offer-management.html" class="unified-nav-link">💼 内定管理</a>
+            <span style="color: white; margin: 0 10px;">|</span>
+            <a href="organization-settings.html" class="unified-nav-link">🏢 組織設定</a>
+            <a href="data-management.html" class="unified-nav-link">📊 データ管理</a>
+            <a href="db-viewer.html" class="unified-nav-link">🗄️ データベース</a>
+            <a href="stage-detail.html" class="unified-nav-link">🔍 ステージ詳細</a>
+        </div>
+    </div>
+</nav>
