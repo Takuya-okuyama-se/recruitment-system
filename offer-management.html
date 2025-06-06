@@ -511,8 +511,7 @@
                     .select(`
                         *,
                         positions(title),
-                        recruitment_stages(stage, status),
-                        job_offers(id, candidate_id, position_id, salary_offered, start_date, offer_sent_date, response_deadline, status)
+                        recruitment_stages(stage, status)
                     `);
                 
                 if (error) throw error;
@@ -520,6 +519,20 @@
                 const offerCandidates = (candidates || []).filter(c => 
                     c.recruitment_stages?.some(s => s.stage === '内定' && s.status === '進行中')
                 );
+                
+                // 各候補者のオファー情報を取得
+                for (const candidate of offerCandidates) {
+                    const { data: offers, error: offerError } = await window.SUPABASE_CLIENT
+                        .from('job_offers')
+                        .select('*')
+                        .eq('candidate_id', candidate.id);
+                    
+                    if (!offerError && offers) {
+                        candidate.job_offers = offers;
+                    } else {
+                        candidate.job_offers = [];
+                    }
+                }
                 
                 displayOffers(offerCandidates);
                 updateStatistics(offerCandidates);
