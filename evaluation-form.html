@@ -541,7 +541,7 @@
             }
 
             data.stage_id = stage.id;
-            data.interviewer_id = 1; // 仮のユーザーID
+            // data.interviewer_id = 1; // interviewer_idは省略（NULL許可）
             delete data.interview_stage; // 不要なフィールドを削除
             
             try {

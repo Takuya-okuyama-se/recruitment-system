@@ -548,14 +548,16 @@
         async function loadStats() {
             try {
                 // 部門データから統計を取得
-                const deptRes = await fetch(`/api/recruitment/by-department`);
-                const deptData = await deptRes.json();
+                const { data: departments, error } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .select('*, positions(id, target_count)');
+                if (error) throw error;
                 
-                document.getElementById('totalDepartments').textContent = deptData.length;
+                document.getElementById('totalDepartments').textContent = departments.length;
                 
-                const totalTarget = deptData.reduce((sum, dept) => sum + (dept.target_hires || 0), 0);
-                const totalHired = deptData.reduce((sum, dept) => sum + (dept.hired || 0), 0);
-                const totalPositions = deptData.reduce((sum, dept) => sum + (dept.open_positions || 0), 0);
+                const totalTarget = departments.reduce((sum, dept) => sum + (dept.positions?.reduce((s, p) => s + (p.target_count || 0), 0) || 0), 0);
+                const totalHired = 0; // 一旦0に設定
+                const totalPositions = departments.reduce((sum, dept) => sum + (dept.positions?.length || 0), 0);
                 
                 document.getElementById('totalTarget').textContent = totalTarget;
                 document.getElementById('totalHired').textContent = totalHired;
@@ -569,20 +571,13 @@
         // 部門一覧の読み込み
         async function loadDepartments() {
             try {
-                const response = await fetch(`/api/organization/departments`);
-                if (!response.ok) {
-                    // APIがまだない場合はデフォルトデータを使用
-                    departments = [
-                        { id: 1, name: '研究開発本部', code: 'RD' },
-                        { id: 2, name: '生産技術部', code: 'PT' },
-                        { id: 3, name: '品質保証部', code: 'QA' },
-                        { id: 4, name: 'マーケティング部', code: 'MKT' },
-                        { id: 5, name: '人事総務部', code: 'HR' }
-                    ];
-                } else {
-                    departments = await response.json();
-                }
+                const { data, error } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .select('*')
+                    .order('name');
                 
+                if (error) throw error;
+                departments = data || [];
                 displayDepartments();
                 updateDepartmentSelect();
                 
@@ -632,18 +627,13 @@
         // 職種一覧の読み込み
         async function loadPositions() {
             try {
-                const response = await fetch(`/api/organization/positions`);
-                if (!response.ok) {
-                    // APIがまだない場合はデフォルトデータを使用
-                    positions = [
-                        { id: 1, department_id: 1, department_name: '研究開発本部', title: '研究開発エンジニア', target_count: 3 },
-                        { id: 2, department_id: 3, department_name: '品質保証部', title: '品質管理責任者', target_count: 1 },
-                        { id: 3, department_id: 2, department_name: '生産技術部', title: '生産技術マネージャー', target_count: 2 }
-                    ];
-                } else {
-                    positions = await response.json();
-                }
+                const { data, error } = await window.SUPABASE_CLIENT
+                    .from('positions')
+                    .select('*, departments(name)')
+                    .order('title');
                 
+                if (error) throw error;
+                positions = data || [];
                 displayPositions();
                 
             } catch (error) {
@@ -779,16 +769,17 @@
                     `/api/organization/departments/${id}` : 
                     `/api/organization/departments`;
                 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('部門の保存に失敗しました');
+                if (id) {
+                    const { error } = await window.SUPABASE_CLIENT
+                        .from('positions')
+                        .update(data)
+                        .eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await window.SUPABASE_CLIENT
+                        .from('positions')
+                        .insert([data]);
+                    if (error) throw error;
                 }
                 
                 showAlert('success', '部門を保存しました');
@@ -820,16 +811,17 @@
                     `/api/organization/positions/${id}` : 
                     `/api/organization/positions`;
                 
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('職種の保存に失敗しました');
+                if (id) {
+                    const { error } = await window.SUPABASE_CLIENT
+                        .from('departments')
+                        .update(data)
+                        .eq('id', id);
+                    if (error) throw error;
+                } else {
+                    const { error } = await window.SUPABASE_CLIENT
+                        .from('departments')
+                        .insert([data]);
+                    if (error) throw error;
                 }
                 
                 showAlert('success', '職種を保存しました');
@@ -850,9 +842,11 @@
             }
             
             try {
-                const response = await fetch(`/api/organization/departments/${id}`, {
-                    method: 'DELETE'
-                });
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
                 
                 if (!response.ok) {
                     throw new Error('部門の削除に失敗しました');
@@ -875,9 +869,11 @@
             }
             
             try {
-                const response = await fetch(`/api/organization/positions/${id}`, {
-                    method: 'DELETE'
-                });
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('positions')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
                 
                 if (!response.ok) {
                     throw new Error('職種の削除に失敗しました');

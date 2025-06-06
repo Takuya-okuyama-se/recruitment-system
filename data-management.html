@@ -416,23 +416,22 @@
         async function loadDataStats() {
             try {
                 // 候補者数
-                const candidatesRes = await window.SUPABASE_CLIENT.from("candidates").select("*");
-                const candidatesData = await candidatesRes.json();
+                const { data: candidates, error } = await window.SUPABASE_CLIENT.from("candidates").select("*");
+                if (error) throw error;
                 document.getElementById('totalCandidates').textContent = 
-                    candidatesData.candidates ? candidatesData.candidates.length : '0';
+                    candidates ? candidates.length : '0';
 
                 // 進行中プロセス数（仮）
-                const activeCount = candidatesData.candidates ? 
-                    candidatesData.candidates.filter(c => c.stage_status === 'in_progress').length : 0;
+                const activeCount = candidates ? candidates.length : 0;
                 document.getElementById('activeProcesses').textContent = activeCount;
 
                 // 評価件数（仮）
                 document.getElementById('totalEvaluations').textContent = 
-                    Math.floor((candidatesData.candidates ? candidatesData.candidates.length : 0) * 0.6);
+                    Math.floor((candidates ? candidates.length : 0) * 0.6);
 
                 // 内定数（仮）
-                const offerCount = candidatesData.candidates ? 
-                    candidatesData.candidates.filter(c => c.current_stage === '内定').length : 0;
+                const offerCount = candidates ? 
+                    candidates.filter(c => c.current_stage === '内定').length : 0;
                 document.getElementById('totalOffers').textContent = offerCount;
 
                 // 平均処理日数（仮）
@@ -446,8 +445,14 @@
         // 部門別採用進捗の読み込み
         async function loadDepartmentProgress() {
             try {
-                const res = await fetch(`/api/recruitment/by-department`);
-                const departments = await res.json();
+                const { data: departments, error } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .select(`
+                        *,
+                        positions(id, target_count),
+                        candidates:positions(candidates(id))
+                    `);
+                if (error) throw error;
                 
                 const progressHTML = departments.map(dept => {
                     const rate = dept.target_hires > 0 ? 
@@ -455,7 +460,7 @@
                     return `
                         <div style="margin-bottom: 15px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span><strong>${dept.department}</strong></span>
+                                <span><strong>${dept.name}</strong></span>
                                 <span>${dept.hired}/${dept.target_hires || 0}名 (${rate}%)</span>
                             </div>
                             <div class="progress-bar">
@@ -474,10 +479,12 @@
         // 処理時間分析の読み込み
         async function loadTimeAnalysis() {
             try {
-                const res = await fetch(`/api/recruitment/overview`);
-                const data = await res.json();
+                const { data: stages, error } = await window.SUPABASE_CLIENT
+                    .from('recruitment_stages')
+                    .select('*');
+                if (error) throw error;
                 
-                if (data.durations && data.durations.length > 0) {
+                if (stages && stages.length > 0) {
                     const analysisHTML = `
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
@@ -515,12 +522,9 @@
             
             try {
                 // サンプルデータSQLを実行
-                const response = await fetch(`/api/data/load-sample`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                showAlert('info', 'この機能はSupabase版では利用できません');
+return;
+            }
                 
                 if (!response.ok) {
                     throw new Error('サンプルデータの投入に失敗しました');
@@ -553,12 +557,9 @@
             showLoading('データをクリア中...');
             
             try {
-                const response = await fetch(`/api/data/clear`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                showAlert('info', 'この機能はSupabase版では利用できません');
+return;
+            }
                 
                 if (!response.ok) {
                     throw new Error('データのクリアに失敗しました');
@@ -584,12 +585,9 @@
             showLoading('処理時間を更新中...');
             
             try {
-                const response = await fetch(`/api/data/update-times`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
+                showAlert('info', 'この機能はSupabase版では利用できません');
+return;
+            }
                 
                 if (!response.ok) {
                     throw new Error('処理時間の更新に失敗しました');
