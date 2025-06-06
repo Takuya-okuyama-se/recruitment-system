@@ -223,14 +223,14 @@
                 const funnelData = {};
 
                 // 全候補者の現在のステージを取得
-                const { data: allCandidates, error: candError } = await window.SUPABASE_CLIENT
+                const { data: allCandidates, error: funnelError } = await window.SUPABASE_CLIENT
                     .from('candidates')
                     .select(`
                         id,
                         recruitment_stages(stage, status, created_at)
                     `);
                 
-                if (candError) throw candError;
+                if (funnelError) throw funnelError;
                 
                 // 各ステージの人数をカウント
                 for (const stage of stages) {
