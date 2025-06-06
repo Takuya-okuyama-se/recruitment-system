@@ -55,9 +55,15 @@
         .info {
             color: #17a2b8;
         }
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 600px;
         }
         th, td {
             padding: 10px;
@@ -143,7 +149,15 @@
 <body>
 
 <nav>
-    <div>
+    <div class="mobile-header">
+        <div class="mobile-logo">🏢 採用管理システム</div>
+    </div>
+    <div class="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    <div class="nav-links">
         <a href="dashboard.html" class="nav-link">📊 ダッシュボード</a>
         <a href="candidate-form.html" class="nav-link">👤 候補者登録</a>
         <a href="evaluation-form.html" class="nav-link">📝 面接評価</a>
