@@ -69,8 +69,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         // リンククリックでメニューを閉じる
-        const links = navLinks.querySelectorAll('.nav-link');
-        links.forEach(link => {
+        const navMenuLinks = navLinks.querySelectorAll('.nav-link');
+        navMenuLinks.forEach(link => {
             link.addEventListener('click', function() {
                 hamburger.classList.remove('active');
                 navLinks.classList.remove('active');
