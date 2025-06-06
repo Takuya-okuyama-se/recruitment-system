@@ -751,11 +751,14 @@
                 
                 console.log('Creating offer with data:', offerData);
                 
-                const { error } = await window.SUPABASE_CLIENT
+                const { data: newOffer, error } = await window.SUPABASE_CLIENT
                     .from('offers')
-                    .insert([offerData]);
+                    .insert([offerData])
+                    .select();
                 
                 if (error) throw error;
+                
+                console.log('Created new offer:', newOffer);
                 
                 // 候補者のステージを内定に更新（まだ内定ステージでない場合）
                 const candidateId = data.candidate_id;
@@ -890,19 +893,27 @@
                 
                 console.log('Updating offer for candidate', candidateId, 'with data:', updateData);
                 
-                const { error } = await window.SUPABASE_CLIENT
+                const { data: updatedOffer, error } = await window.SUPABASE_CLIENT
                     .from('offers')
                     .update(updateData)
-                    .eq('candidate_id', candidateId);
+                    .eq('candidate_id', candidateId)
+                    .select();
                 
                 if (error) throw error;
+                
+                console.log('Update result:', updatedOffer);
+                
+                if (!updatedOffer || updatedOffer.length === 0) {
+                    throw new Error('更新されたレコードが見つかりません');
+                }
                 
                 showAlert('success', '内定条件を更新しました');
                 closeEditModal();
                 loadOffers(); // リロード
             } catch (error) {
+                console.error('Update error:', error);
                 // オファーが存在しない場合は新規作成
-                if (error.code === 'PGRST116') {
+                if (error.code === 'PGRST116' || error.message.includes('更新されたレコードが見つかりません')) {
                     try {
                         // 候補者の職種IDを取得
                         const { data: candidate, error: candError } = await window.SUPABASE_CLIENT
@@ -914,19 +925,26 @@
                         if (candError) throw candError;
                         
                         // 新規オファーを作成
-                        const { error: insertError } = await window.SUPABASE_CLIENT
+                        const newOfferData = {
+                            candidate_id: parseInt(candidateId),
+                            position_id: candidate.position_id,
+                            salary: salary,
+                            start_date: startDate,
+                            response_deadline: deadline,
+                            offer_date: new Date().toISOString().split('T')[0],
+                            status: '提示中'
+                        };
+                        
+                        console.log('Creating new offer with data:', newOfferData);
+                        
+                        const { data: newOffer, error: insertError } = await window.SUPABASE_CLIENT
                             .from('offers')
-                            .insert([{
-                                candidate_id: candidateId,
-                                position_id: candidate.position_id,
-                                salary: salary,
-                                start_date: startDate,
-                                response_deadline: deadline,
-                                offer_date: new Date().toISOString().split('T')[0],
-                                status: '提示中'
-                            }]);
+                            .insert([newOfferData])
+                            .select();
                         
                         if (insertError) throw insertError;
+                        
+                        console.log('Created new offer:', newOffer);
                         
                         showAlert('success', '内定条件を設定しました');
                         closeEditModal();
