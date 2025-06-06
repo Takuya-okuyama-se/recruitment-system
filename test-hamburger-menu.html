@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ハンバーガーメニューテスト</title>
+    <link rel="stylesheet" href="unified-styles.css">
+    <style>
+        .test-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .device-frame {
+            margin: 20px 0;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+        }
+        
+        .mobile-frame {
+            width: 375px;
+            height: 667px;
+            margin: 0 auto;
+            border: 16px solid #333;
+            border-radius: 36px;
+            overflow: hidden;
+            position: relative;
+            background: white;
+        }
+        
+        .mobile-screen {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #e8f5e9;
+            border-radius: 8px;
+        }
+        
+        .test-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .status-ok {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+        
+        .status-error {
+            color: #c62828;
+            font-weight: bold;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div>
+            <a href="dashboard.html" class="nav-link">📊 ダッシュボード</a>
+            <a href="candidate-form.html" class="nav-link">👤 候補者登録</a>
+            <a href="evaluation-form.html" class="nav-link">📝 面接評価</a>
+            <a href="aptitude-test-form.html" class="nav-link">📊 適性検査</a>
+            <a href="offer-management.html" class="nav-link">💼 内定管理</a>
+            <a href="data-management.html" class="nav-link">📈 データ管理</a>
+            <a href="organization-settings.html" class="nav-link">⚙️ 組織設定</a>
+            <a href="db-viewer.html" class="nav-link">🗄️ DBビューア</a>
+        </div>
+    </nav>
+
+    <div class="test-container">
+        <h1>🍔 ハンバーガーメニューテスト</h1>
+        
+        <div class="test-results">
+            <h2>📱 テスト結果</h2>
+            <div id="testResults"></div>
+        </div>
+        
+        <div class="device-frame">
+            <h2>📱 モバイルビュー (375px)</h2>
+            <p>下の画面でハンバーガーメニューが表示されているか確認してください：</p>
+            <div class="mobile-frame">
+                <div class="mobile-screen">
+                    <iframe src="dashboard.html" id="mobilePreview"></iframe>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h2>🔍 手動テスト手順</h2>
+            <ol>
+                <li>ブラウザの開発者ツールを開く (F12)</li>
+                <li>レスポンシブモードに切り替える (Ctrl+Shift+M)</li>
+                <li>画面幅を375pxに設定</li>
+                <li>ナビゲーションバーにハンバーガーメニューが表示されることを確認</li>
+                <li>ハンバーガーメニューをクリックしてメニューが開閉することを確認</li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h2>📝 チェックするページ</h2>
+            <ul>
+                <li><a href="dashboard.html" target="_blank">Dashboard</a></li>
+                <li><a href="candidate-form.html" target="_blank">Candidate Form</a></li>
+                <li><a href="evaluation-form.html" target="_blank">Evaluation Form</a></li>
+                <li><a href="dashboard-supabase.html" target="_blank">Dashboard Supabase</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // ナビゲーション要素のテスト
+        function runTests() {
+            const results = document.getElementById('testResults');
+            const tests = [];
+            
+            // Test 1: nav要素の存在
+            const navElement = document.querySelector('nav');
+            tests.push({
+                name: 'nav要素の存在',
+                status: navElement ? 'OK' : 'ERROR',
+                message: navElement ? '✓ nav要素が見つかりました' : '✗ nav要素が見つかりません'
+            });
+            
+            // Test 2: nav内のdiv要素
+            const navDiv = navElement ? navElement.querySelector('div') : null;
+            tests.push({
+                name: 'nav内のdiv要素',
+                status: navDiv ? 'OK' : 'ERROR',
+                message: navDiv ? '✓ div要素が見つかりました' : '✗ div要素が見つかりません'
+            });
+            
+            // Test 3: nav-hamburger.jsの読み込み
+            const hamburgerScript = document.querySelector('script[src="nav-hamburger.js"]');
+            tests.push({
+                name: 'nav-hamburger.jsの読み込み',
+                status: hamburgerScript ? 'OK' : 'ERROR',
+                message: hamburgerScript ? '✓ スクリプトが読み込まれています' : '✗ スクリプトが読み込まれていません'
+            });
+            
+            // Test 4: unified-styles.cssの読み込み
+            const unifiedStyles = document.querySelector('link[href="unified-styles.css"]');
+            tests.push({
+                name: 'unified-styles.cssの読み込み',
+                status: unifiedStyles ? 'OK' : 'ERROR',
+                message: unifiedStyles ? '✓ スタイルシートが読み込まれています' : '✗ スタイルシートが読み込まれていません'
+            });
+            
+            // Test 5: モバイルヘッダーの存在（DOMContentLoaded後）
+            setTimeout(() => {
+                const mobileHeader = document.querySelector('.mobile-header');
+                const hamburger = document.querySelector('.hamburger');
+                tests.push({
+                    name: 'ハンバーガーメニュー要素',
+                    status: hamburger ? 'OK' : 'ERROR',
+                    message: hamburger ? '✓ ハンバーガーボタンが作成されました' : '✗ ハンバーガーボタンが見つかりません'
+                });
+                
+                displayResults(tests);
+            }, 1000);
+            
+            displayResults(tests);
+        }
+        
+        function displayResults(tests) {
+            const results = document.getElementById('testResults');
+            results.innerHTML = tests.map(test => `
+                <div class="test-item">
+                    <span>${test.name}: ${test.message}</span>
+                    <span class="status-${test.status.toLowerCase()}">${test.status}</span>
+                </div>
+            `).join('');
+        }
+        
+        // テスト実行
+        window.addEventListener('DOMContentLoaded', runTests);
+    </script>
+    <script src="nav-hamburger.js"></script>
+</body>
+</html>
