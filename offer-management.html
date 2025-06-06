@@ -512,7 +512,7 @@
                         *,
                         positions(title),
                         recruitment_stages(stage, status),
-                        offers(id, candidate_id, position_id, salary, start_date, offer_date, response_deadline, status, response_date)
+                        offers(id, candidate_id, position_id, salary, start_date, offer_date, response_deadline, status)
                     `);
                 
                 if (error) throw error;
@@ -783,8 +783,7 @@
                     const { error: offerError } = await window.SUPABASE_CLIENT
                         .from('offers')
                         .update({ 
-                            status: statusJp,
-                            response_date: new Date().toISOString().split('T')[0]
+                            status: statusJp
                         })
                         .eq('candidate_id', candidateId);
                     
