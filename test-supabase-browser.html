@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase ブラウザテスト</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #FF6B35;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #e55a2b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Supabase接続テスト</h1>
+        
+        <div class="test-section">
+            <h2>設定情報</h2>
+            <div id="config"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>テスト結果</h2>
+            <button onclick="runTests()">テスト実行</button>
+            <button onclick="clearResults()">結果クリア</button>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase設定
+        const SUPABASE_URL = 'https://obmuuwipbwoaoeakpkfg.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ibXV1d2lwYndvYW9lYWtwa2ZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkxOTIzNzEsImV4cCI6MjA2NDc2ODM3MX0.RypGId5n3TpBwtVrSe88z_e9vmgAF17FxwNBiYZxRyY';
+
+        // Supabaseクライアントの初期化
+        let supabase;
+        try {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            document.getElementById('config').innerHTML = `
+                <p class="success">✓ Supabaseクライアント初期化成功</p>
+                <p><strong>URL:</strong> ${SUPABASE_URL}</p>
+                <p><strong>Key (first 20 chars):</strong> ${SUPABASE_ANON_KEY.substring(0, 20)}...</p>
+            `;
+        } catch (error) {
+            document.getElementById('config').innerHTML = `
+                <p class="error">✗ Supabaseクライアント初期化失敗</p>
+                <pre>${error.message}</pre>
+            `;
+        }
+
+        function addResult(message, isSuccess = true) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = isSuccess ? 'success' : 'error';
+            div.innerHTML = `${isSuccess ? '✓' : '✗'} ${message}`;
+            results.appendChild(div);
+        }
+
+        function addDetails(data) {
+            const results = document.getElementById('results');
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(data, null, 2);
+            results.appendChild(pre);
+        }
+
+        async function runTests() {
+            clearResults();
+            
+            if (!supabase) {
+                addResult('Supabaseクライアントが初期化されていません', false);
+                return;
+            }
+
+            // 1. 部門データの取得
+            try {
+                addResult('部門データ取得中...');
+                const { data: departments, error } = await supabase
+                    .from('departments')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult(`部門データ取得成功: ${departments.length}件`);
+                addDetails(departments);
+            } catch (error) {
+                addResult(`部門データ取得失敗: ${error.message}`, false);
+                addDetails(error);
+            }
+
+            // 2. 職種データの取得
+            try {
+                addResult('職種データ取得中...');
+                const { data: positions, error } = await supabase
+                    .from('positions')
+                    .select('*, departments(name)')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult(`職種データ取得成功: ${positions.length}件`);
+                addDetails(positions);
+            } catch (error) {
+                addResult(`職種データ取得失敗: ${error.message}`, false);
+                addDetails(error);
+            }
+
+            // 3. 候補者データの取得
+            try {
+                addResult('候補者データ取得中...');
+                const { data: candidates, error } = await supabase
+                    .from('candidates')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult(`候補者データ取得成功: ${candidates.length}件`);
+                addDetails(candidates);
+            } catch (error) {
+                addResult(`候補者データ取得失敗: ${error.message}`, false);
+                addDetails(error);
+            }
+
+            // 4. 採用ステージデータの取得
+            try {
+                addResult('採用ステージデータ取得中...');
+                const { data: stages, error } = await supabase
+                    .from('recruitment_stages')
+                    .select('*, candidates(name)')
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                addResult(`採用ステージデータ取得成功: ${stages.length}件`);
+                addDetails(stages);
+            } catch (error) {
+                addResult(`採用ステージデータ取得失敗: ${error.message}`, false);
+                addDetails(error);
+            }
+
+            // 5. RLSポリシーのテスト（挿入テスト）
+            try {
+                addResult('RLSポリシーテスト（テストデータ挿入）...');
+                const testData = {
+                    name: 'テスト部門_' + new Date().getTime(),
+                    description: 'テスト用の部門です'
+                };
+                
+                const { data: newDept, error } = await supabase
+                    .from('departments')
+                    .insert([testData])
+                    .select()
+                    .single();
+                
+                if (error) throw error;
+                
+                addResult('テストデータ挿入成功');
+                addDetails(newDept);
+                
+                // 削除
+                const { error: deleteError } = await supabase
+                    .from('departments')
+                    .delete()
+                    .eq('id', newDept.id);
+                
+                if (deleteError) throw deleteError;
+                addResult('テストデータ削除成功');
+            } catch (error) {
+                addResult(`RLSポリシーテスト失敗: ${error.message}`, false);
+                addDetails(error);
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // ページ読み込み時に自動実行
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 1000);
+        });
+    </script>
+</body>
+</html>

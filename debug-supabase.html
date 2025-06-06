@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabaseデバッグ</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #666;
+        }
+        .success { border-color: #4caf50; color: #4caf50; }
+        .error { border-color: #f44336; color: #f44336; }
+        .info { border-color: #2196f3; color: #2196f3; }
+        pre {
+            background: #2d2d2d;
+            padding: 10px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Supabaseデバッグコンソール</h1>
+    <div id="logs"></div>
+
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+        }
+
+        function logJSON(obj) {
+            const pre = document.createElement('pre');
+            pre.textContent = JSON.stringify(obj, null, 2);
+            logs.appendChild(pre);
+        }
+
+        // デバッグ開始
+        log('デバッグ開始...', 'info');
+
+        // 1. Supabaseライブラリの確認
+        if (typeof window.supabase !== 'undefined') {
+            log('✓ Supabaseライブラリが読み込まれています', 'success');
+        } else {
+            log('✗ Supabaseライブラリが見つかりません', 'error');
+        }
+
+        // 2. supabase-config.jsの確認
+        if (typeof window.SUPABASE_CLIENT !== 'undefined') {
+            log('✓ SUPABASE_CLIENTが定義されています', 'success');
+        } else {
+            log('✗ SUPABASE_CLIENTが未定義です', 'error');
+        }
+
+        // 3. 接続テスト
+        async function testConnection() {
+            try {
+                log('データベース接続テスト中...', 'info');
+                
+                const { data, error } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .select('*')
+                    .limit(1);
+                
+                if (error) {
+                    log(`エラー: ${error.message}`, 'error');
+                    logJSON(error);
+                } else {
+                    log('✓ データベース接続成功', 'success');
+                    log(`取得したデータ数: ${data.length}`, 'info');
+                    if (data.length > 0) {
+                        logJSON(data[0]);
+                    }
+                }
+            } catch (err) {
+                log(`キャッチされたエラー: ${err.message}`, 'error');
+                console.error(err);
+            }
+        }
+
+        // 4. ネットワークエラーのチェック
+        window.addEventListener('error', (event) => {
+            log(`グローバルエラー: ${event.message}`, 'error');
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+            log(`未処理のPromiseエラー: ${event.reason}`, 'error');
+        });
+
+        // テスト実行
+        setTimeout(testConnection, 100);
+    </script>
+</body>
+</html>
