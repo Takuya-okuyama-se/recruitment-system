@@ -462,15 +462,26 @@
         // 候補者リストの読み込み
         async function loadCandidates() {
             try {
-                const { data, error } = await window.SUPABASE_CLIENT.from("candidates").select("*");
-if (error) throw error;
+                const { data: candidates, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select(`
+                        *,
+                        positions(title),
+                        recruitment_stages(stage, status)
+                    `);
                 
-                const aptitudeCandidates = data.candidates.filter(c => 
-                    c.current_stage === '適性検査' && c.stage_status === 'in_progress'
+                if (error) throw error;
+                
+                // 適性検査ステージで進行中の候補者をフィルタ
+                const aptitudeCandidates = (candidates || []).filter(c => 
+                    c.recruitment_stages?.some(s => 
+                        s.stage === '適性検査' && s.status === '進行中'
+                    )
                 );
                 
                 displayCandidates(aptitudeCandidates);
             } catch (error) {
+                console.error('Error loading candidates:', error);
                 document.getElementById('candidatesList').innerHTML = 
                     '<p style="color: red;">エラー: ' + error.message + '</p>';
             }
@@ -485,10 +496,10 @@ if (error) throw error;
             }
 
             const html = candidates.map(c => `
-                <div class="candidate-item" onclick="selectCandidate(${c.id}, '${c.last_name} ${c.first_name}')">
-                    <strong>${c.last_name} ${c.first_name}</strong>
+                <div class="candidate-item" onclick="selectCandidate(${c.id}, '${c.name}')">
+                    <strong>${c.name}</strong>
                     <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                        ${c.position_title || '未設定'}
+                        ${c.positions?.title || '未設定'}
                     </div>
                 </div>
             `).join('');
@@ -614,18 +625,37 @@ if (error) throw error;
             });
             
             try {
-                const response = await fetch(`/api/aptitude-tests`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+                // スコアと最大値を計算
+                const totalScore = (data.verbal_score || 0) + (data.numerical_score || 0) + (data.logical_score || 0);
+                const maxScore = 300; // 各100点満点 x 3
                 
-                const result = await response.json();
+                // サブスコアをJSON形式で保存
+                const subScores = {
+                    '言語能力': data.verbal_score,
+                    '数的能力': data.numerical_score,
+                    '論理的思考': data.logical_score,
+                    'リーダーシップ': data.leadership_score,
+                    '協調性': data.cooperation_score,
+                    'ストレス耐性': data.stress_resistance_score
+                };
                 
-                if (response.ok) {
-                    showAlert('success', '適性検査結果が登録されました');
+                const testData = {
+                    candidate_id: selectedCandidate.id,
+                    test_type: '総合適性検査',
+                    score: totalScore,
+                    max_score: maxScore,
+                    sub_scores: subScores,
+                    conducted_date: new Date().toISOString().split('T')[0],
+                    notes: data.notes || null
+                };
+                
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('aptitude_tests')
+                    .insert([testData]);
+                
+                if (error) throw error;
+                
+                showAlert('success', '適性検査結果が登録されました');
                     
                     // 能力検査の平均を計算
                     const abilityAvg = (data.verbal_score + data.numerical_score + data.logical_score) / 3;
@@ -687,6 +717,53 @@ if (error) throw error;
                 b.classList.remove('selected')
             );
             document.getElementById('resultSummary').classList.remove('show');
+        }
+
+        // ステージを進める
+        async function advanceStage(candidateId, action) {
+            try {
+                // 現在のステージを取得
+                const { data: stagesArray, error: stageError } = await window.SUPABASE_CLIENT
+                    .from('recruitment_stages')
+                    .select('*')
+                    .eq('candidate_id', candidateId)
+                    .eq('stage', '適性検査')
+                    .eq('status', '進行中');
+                
+                if (stageError) throw stageError;
+                if (!stagesArray || stagesArray.length === 0) return;
+                
+                const currentStage = stagesArray[0];
+                
+                // 現在のステージを完了
+                const { error: updateError } = await window.SUPABASE_CLIENT
+                    .from('recruitment_stages')
+                    .update({ 
+                        status: action === 'pass' ? '合格' : '不合格',
+                        completed_date: new Date().toISOString().split('T')[0]
+                    })
+                    .eq('id', currentStage.id);
+                
+                if (updateError) throw updateError;
+                
+                // 合格の場合は次のステージを作成
+                if (action === 'pass') {
+                    const { error: insertError } = await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .insert([{
+                            candidate_id: candidateId,
+                            stage: '最終面接',
+                            status: '進行中',
+                            scheduled_date: new Date().toISOString().split('T')[0]
+                        }]);
+                    
+                    if (insertError) throw insertError;
+                }
+                
+                loadCandidates();
+            } catch (error) {
+                console.error('Error advancing stage:', error);
+            }
         }
 
         // アラート表示
