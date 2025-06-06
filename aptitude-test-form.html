@@ -656,48 +656,25 @@
                 if (error) throw error;
                 
                 showAlert('success', '適性検査結果が登録されました');
-                    
-                    // 能力検査の平均を計算
-                    const abilityAvg = (data.verbal_score + data.numerical_score + data.logical_score) / 3;
-                    
-                    // 基準値（70点以上なら合格推奨）
-                    if (abilityAvg >= 70 || data.overall_result === 'excellent' || data.overall_result === 'good') {
-                        if (confirm('この候補者を次のステージ（最終面接）に進めますか？')) {
-                            await advanceStage(selectedCandidate.id, 'pass');
-                        }
+                
+                // 能力検査の平均を計算
+                const abilityAvg = (data.verbal_score + data.numerical_score + data.logical_score) / 3;
+                
+                // 基準値（70点以上なら合格推奨）
+                if (abilityAvg >= 70 || data.overall_result === 'excellent' || data.overall_result === 'good') {
+                    if (confirm('この候補者を次のステージ（最終面接）に進めますか？')) {
+                        await advanceStage(selectedCandidate.id, 'pass');
                     }
-                    
-                    // フォームリセット
-                    resetForm();
-                    loadCandidates();
-                } else {
-                    showAlert('error', result.error || 'エラーが発生しました');
                 }
+                
+                // フォームリセット
+                resetForm();
+                loadCandidates();
             } catch (error) {
                 showAlert('error', 'ネットワークエラー: ' + error.message);
             }
         });
 
-        // ステージ進行
-        async function advanceStage(candidateId, action) {
-            try {
-                const response = await fetch(`/api/candidates/${candidateId}/advance-stage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ action })
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    showAlert('success', result.message);
-                }
-            } catch (error) {
-                console.error('Error advancing stage:', error);
-            }
-        }
 
         // フォームリセット
         function resetForm() {
