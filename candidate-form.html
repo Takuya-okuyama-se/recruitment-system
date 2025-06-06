@@ -172,6 +172,9 @@
         .btn-small.btn-secondary {
             background-color: #dc3545;
         }
+        .btn-small.btn-info {
+            background-color: #17a2b8;
+        }
     </style>
 </head>
 <body>
@@ -403,6 +406,7 @@
                                 <td><span class="stage-badge stage-${currentStage?.stage || '書類選考'}">${currentStage?.stage || '書類選考'}</span></td>
                                 <td>${new Date(c.created_at).toLocaleDateString('ja-JP')}</td>
                                 <td class="action-buttons">
+                                    <button class="btn-small btn-info" onclick="viewCandidate(${c.id})">詳細</button>
                                     <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
                                     <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
                                 </td>
@@ -412,6 +416,11 @@
                 </table>
             `;
             document.getElementById('candidatesTable').innerHTML = html;
+        }
+
+        // 候補者詳細を表示
+        function viewCandidate(candidateId) {
+            window.location.href = `candidate-detail.html?id=${candidateId}`;
         }
 
         // ステージ進行
@@ -441,7 +450,7 @@
                     if (error) throw error;
                 } else {
                     // 次のステージに進める
-                    const stageOrder = ['書類選考', '一次面接', '二次面接', '最終面接', '内定'];
+                    const stageOrder = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
                     const currentIndex = stageOrder.indexOf(stages.stage);
                     
                     if (currentIndex < stageOrder.length - 1) {

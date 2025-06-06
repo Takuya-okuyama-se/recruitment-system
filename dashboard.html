@@ -219,7 +219,7 @@
         async function loadDashboard() {
             try {
                 // 採用ファネルデータ
-                const stages = ['書類選考', '一次面接', '二次面接', '最終面接', '内定'];
+                const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
                 const funnelData = {};
 
                 for (const stage of stages) {
@@ -272,7 +272,7 @@
             const funnelDiv = document.getElementById('funnel');
             funnelDiv.innerHTML = '';
 
-            const stages = ['書類選考', '一次面接', '二次面接', '最終面接', '内定'];
+            const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
             stages.forEach(stage => {
                 const count = data[stage] || 0;
                 const stageDiv = document.createElement('div');

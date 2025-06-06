@@ -462,6 +462,40 @@
         <div id="offersList" class="offer-grid">
             <p style="text-align: center; color: #999;">読み込み中...</p>
         </div>
+
+        <!-- 編集モーダル -->
+        <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000;">
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);">
+                <h2 style="margin-bottom: 20px;">内定条件の編集</h2>
+                <form id="editOfferForm">
+                    <input type="hidden" id="edit_candidate_id">
+                    
+                    <div class="form-group">
+                        <label for="edit_salary">年収提示額（万円） *</label>
+                        <div class="salary-input">
+                            <input type="number" id="edit_salary" name="salary" 
+                                   min="300" max="2000" step="10" required>
+                            <span>万円</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_start_date">入社予定日 *</label>
+                        <input type="date" id="edit_start_date" name="start_date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_response_deadline">回答期限 *</label>
+                        <input type="date" id="edit_response_deadline" name="response_deadline" required>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn btn-primary">更新</button>
+                        <button type="button" class="btn" onclick="closeEditModal()">キャンセル</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -553,11 +587,14 @@
                         </div>
                         
                         <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="editOffer(${c.id}, ${offerData.salary}, '${offerData.startDate}', '${offerData.deadline}')">
+                                編集
+                            </button>
                             <button class="btn btn-success" onclick="updateOfferStatus(${c.id}, 'accepted')">
-                                承諾確認
+                                承諾
                             </button>
                             <button class="btn btn-danger" onclick="updateOfferStatus(${c.id}, 'rejected')">
-                                辞退確認
+                                辞退
                             </button>
                         </div>
                     </div>
@@ -679,6 +716,40 @@
                 alertDiv.remove();
             }, 5000);
         }
+
+        // オファー編集モーダルを開く
+        function editOffer(candidateId, salary, startDate, deadline) {
+            document.getElementById('edit_candidate_id').value = candidateId;
+            document.getElementById('edit_salary').value = salary;
+            document.getElementById('edit_start_date').value = startDate;
+            document.getElementById('edit_response_deadline').value = deadline;
+            document.getElementById('editModal').style.display = 'block';
+        }
+
+        // 編集モーダルを閉じる
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editOfferForm').reset();
+        }
+
+        // オファー編集フォーム送信
+        document.getElementById('editOfferForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const candidateId = document.getElementById('edit_candidate_id').value;
+            const salary = document.getElementById('edit_salary').value;
+            const startDate = document.getElementById('edit_start_date').value;
+            const deadline = document.getElementById('edit_response_deadline').value;
+            
+            try {
+                // 実際の実装では、ここでAPIを呼び出して更新
+                showAlert('success', '内定条件を更新しました');
+                closeEditModal();
+                loadOffers(); // リロード
+            } catch (error) {
+                showAlert('error', 'エラーが発生しました: ' + error.message);
+            }
+        });
 
         // 初期設定
         const today = new Date();

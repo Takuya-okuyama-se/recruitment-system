@@ -363,6 +363,7 @@
             <a href="dashboard.html" class="btn">📊 ダッシュボードへ戻る</a>
             <button class="btn" onclick="changeStage('書類選考')">書類選考</button>
             <button class="btn" onclick="changeStage('一次面接')">一次面接</button>
+            <button class="btn" onclick="changeStage('二次面接')">二次面接</button>
             <button class="btn" onclick="changeStage('適性検査')">適性検査</button>
             <button class="btn" onclick="changeStage('最終面接')">最終面接</button>
             <button class="btn" onclick="changeStage('内定')">内定</button>
@@ -541,6 +542,7 @@
             const colors = {
                 '書類選考': '#3498db',
                 '一次面接': '#9b59b6',
+                '二次面接': '#e91e63',
                 '適性検査': '#f39c12',
                 '最終面接': '#27ae60',
                 '内定': '#e74c3c'
@@ -778,7 +780,7 @@
 
         // 詳細表示
         function viewDetails(candidateId) {
-            alert(`候補者ID: ${candidateId}の詳細画面は別途実装予定です`);
+            window.location.href = `candidate-detail.html?id=${candidateId}`;
         }
 
         // 初期読み込み
