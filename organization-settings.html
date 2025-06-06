@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>組織・採用設定 - 採用管理システム</title>
-    <script src="config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -378,22 +379,37 @@
     </style>
 </head>
 <body>
-    <nav style="background-color: #FF6B35; padding: 10px 0; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <div style="max-width: 1400px; margin: 0 auto; padding: 0 20px; text-align: center;">
-            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-                <a href="dashboard.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 ダッシュボード</a>
-                <a href="candidate-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">👥 候補者管理</a>
-                <a href="evaluation-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📝 面接評価</a>
-                <a href="aptitude-test-form.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📋 適性検査</a>
-                <a href="offer-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">💼 内定管理</a>
-                <span style="color: white; margin: 0 10px;">|</span>
-                <a href="organization-settings.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🏢 組織設定</a>
-                <a href="data-management.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">📊 データ管理</a>
-                <a href="db-viewer.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🗄️ データベース</a>
-                <a href="stage-detail.html" style="background-color: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 6px 12px; border-radius: 5px; font-size: 13px;">🔍 ステージ詳細</a>
-            </div>
-        </div>
-    </nav>
+
+<nav style="background-color: #2c3e50; padding: 0; margin: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; padding: 10px;">
+        <a href="dashboard.html" class="nav-link">📊 ダッシュボード</a>
+        <a href="candidate-form.html" class="nav-link">👤 候補者登録</a>
+        <a href="evaluation-form.html" class="nav-link">📝 面接評価</a>
+        <a href="aptitude-test-form.html" class="nav-link">📊 適性検査</a>
+        <a href="offer-management.html" class="nav-link">💼 内定管理</a>
+        <a href="data-management.html" class="nav-link">📈 データ管理</a>
+        <a href="organization-settings.html" class="nav-link">⚙️ 組織設定</a>
+        <a href="db-viewer.html" class="nav-link">🗄️ DBビューア</a>
+    </div>
+</nav>
+
+<style>
+.nav-link {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    display: inline-block;
+    font-size: 14px;
+}
+.nav-link:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+}
+</style>
+
+    
     <div class="container">
         <h1>🏢 組織・採用設定</h1>
         
@@ -517,7 +533,7 @@
     </div>
 
     <script>
-        const API_BASE = window.API_CONFIG?.BASE_URL || 'http://localhost:5000';
+        // Supabaseクライアントはsupabase-config.jsで定義済み
         let departments = [];
         let positions = [];
 
@@ -532,7 +548,7 @@
         async function loadStats() {
             try {
                 // 部門データから統計を取得
-                const deptRes = await fetch(`${API_BASE}/api/recruitment/by-department`);
+                const deptRes = await fetch(`/api/recruitment/by-department`);
                 const deptData = await deptRes.json();
                 
                 document.getElementById('totalDepartments').textContent = deptData.length;
@@ -553,7 +569,7 @@
         // 部門一覧の読み込み
         async function loadDepartments() {
             try {
-                const response = await fetch(`${API_BASE}/api/organization/departments`);
+                const response = await fetch(`/api/organization/departments`);
                 if (!response.ok) {
                     // APIがまだない場合はデフォルトデータを使用
                     departments = [
@@ -616,7 +632,7 @@
         // 職種一覧の読み込み
         async function loadPositions() {
             try {
-                const response = await fetch(`${API_BASE}/api/organization/positions`);
+                const response = await fetch(`/api/organization/positions`);
                 if (!response.ok) {
                     // APIがまだない場合はデフォルトデータを使用
                     positions = [
@@ -760,8 +776,8 @@
             try {
                 const method = id ? 'PUT' : 'POST';
                 const url = id ? 
-                    `${API_BASE}/api/organization/departments/${id}` : 
-                    `${API_BASE}/api/organization/departments`;
+                    `/api/organization/departments/${id}` : 
+                    `/api/organization/departments`;
                 
                 const response = await fetch(url, {
                     method: method,
@@ -801,8 +817,8 @@
             try {
                 const method = id ? 'PUT' : 'POST';
                 const url = id ? 
-                    `${API_BASE}/api/organization/positions/${id}` : 
-                    `${API_BASE}/api/organization/positions`;
+                    `/api/organization/positions/${id}` : 
+                    `/api/organization/positions`;
                 
                 const response = await fetch(url, {
                     method: method,
@@ -834,7 +850,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/api/organization/departments/${id}`, {
+                const response = await fetch(`/api/organization/departments/${id}`, {
                     method: 'DELETE'
                 });
                 
@@ -859,7 +875,7 @@
             }
             
             try {
-                const response = await fetch(`${API_BASE}/api/organization/positions/${id}`, {
+                const response = await fetch(`/api/organization/positions/${id}`, {
                     method: 'DELETE'
                 });
                 
