@@ -500,6 +500,7 @@
 
     <script>
         // Supabaseクライアントはsupabase-config.jsで定義済み
+        let candidatesData = {}; // 候補者データを保存
 
         // 内定者一覧の読み込み
         async function loadOffers() {
@@ -510,7 +511,8 @@
                     .select(`
                         *,
                         positions(title),
-                        recruitment_stages(stage, status)
+                        recruitment_stages(stage, status),
+                        offers(id, candidate_id, position_id, salary, start_date, offer_date, response_deadline, status, response_date)
                     `);
                 
                 if (error) throw error;
@@ -537,18 +539,44 @@
             }
 
             const html = candidates.map(c => {
-                // ダミーデータ（実際はAPIから取得）
+                // offersテーブルからデータを取得、なければデフォルト値
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
+                console.log('Candidate:', c.name);
+                console.log('Raw offer data:', offer);
+                console.log('Offers array:', c.offers);
+                
                 const offerData = {
-                    salary: Math.floor(400 + Math.random() * 400),
-                    startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    status: 'pending'
+                    salary: offer && offer.salary ? Math.floor(offer.salary / 10000) : null,
+                    startDate: offer?.start_date || null,
+                    deadline: offer?.response_deadline || null,
+                    status: offer?.status || null
                 };
+                
+                console.log('Processed offer data:', offerData);
+                
+                // 候補者データを保存
+                candidatesData[c.id] = {
+                    candidate: c,
+                    offerData: offerData
+                };
+
+                // ステータスに応じたCSSクラスを設定
+                const displayStatus = offerData.status || '未設定';
+                const statusClass = {
+                    'pending': 'pending',
+                    'accepted': 'accepted',
+                    'rejected': 'rejected',
+                    '提示中': 'pending',
+                    '承諾': 'accepted',
+                    '辞退': 'rejected',
+                    '取消': 'rejected',
+                    '未設定': 'pending'
+                }[displayStatus] || 'pending';
 
                 return `
                     <div class="offer-card">
-                        <div class="status-badge status-${offerData.status}">
-                            ${getStatusText(offerData.status)}
+                        <div class="status-badge status-${statusClass}">
+                            ${displayStatus === '未設定' ? '内定条件未設定' : getStatusText(displayStatus)}
                         </div>
                         
                         <div class="candidate-info">
@@ -559,15 +587,15 @@
                         <div class="offer-details">
                             <div class="detail-row">
                                 <span class="detail-label">提示年収</span>
-                                <span class="detail-value">${offerData.salary}万円</span>
+                                <span class="detail-value">${offerData.salary !== null && offerData.salary !== undefined ? `${offerData.salary}万円` : '未設定'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">入社予定日</span>
-                                <span class="detail-value">${formatDate(offerData.startDate)}</span>
+                                <span class="detail-value">${offerData.startDate !== null && offerData.startDate !== undefined ? formatDate(offerData.startDate) : '未設定'}</span>
                             </div>
                             <div class="detail-row">
                                 <span class="detail-label">回答期限</span>
-                                <span class="detail-value">${formatDate(offerData.deadline)}</span>
+                                <span class="detail-value">${offerData.deadline !== null && offerData.deadline !== undefined ? formatDate(offerData.deadline) : '未設定'}</span>
                             </div>
                         </div>
                         
@@ -587,7 +615,7 @@
                         </div>
                         
                         <div class="action-buttons">
-                            <button class="btn btn-primary" onclick="editOffer(${c.id}, ${offerData.salary}, '${offerData.startDate}', '${offerData.deadline}')">
+                            <button class="btn btn-primary" onclick="editOffer(${c.id})">
                                 編集
                             </button>
                             <button class="btn btn-success" onclick="updateOfferStatus(${c.id}, 'accepted')">
@@ -607,8 +635,14 @@
         // 統計情報の更新
         function updateStatistics(candidates) {
             const total = candidates.length;
-            const accepted = candidates.filter(c => c.offer_status === 'accepted').length;
-            const pending = candidates.filter(c => c.offer_status === 'pending' || !c.offer_status).length;
+            const accepted = candidates.filter(c => {
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
+                return offer?.status === 'accepted' || offer?.status === '承諾';
+            }).length;
+            const pending = candidates.filter(c => {
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
+                return !offer || offer.status === 'pending' || offer.status === '提示中';
+            }).length;
             const acceptanceRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
 
             document.getElementById('totalOffers').textContent = total;
@@ -623,14 +657,20 @@
                 'pending': '回答待ち',
                 'accepted': '承諾',
                 'rejected': '辞退',
-                'negotiating': '交渉中'
+                'negotiating': '交渉中',
+                '提示中': '回答待ち',
+                '承諾': '承諾',
+                '辞退': '辞退',
+                '取消': '取消'
             };
             return texts[status] || '回答待ち';
         }
 
         // 日付フォーマット
         function formatDate(dateString) {
+            if (!dateString) return '未設定';
             const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '未設定';
             return date.toLocaleDateString('ja-JP', {
                 year: 'numeric',
                 month: 'long',
@@ -679,26 +719,96 @@
             const data = Object.fromEntries(formData);
             
             // 年収を数値に変換（万円→円）
-            data.salary_offered = parseInt(data.salary_offered) * 10000;
+            const salary = parseInt(data.salary_offered) * 10000;
+            const candidateId = parseInt(data.candidate_id);
+            const positionId = parseInt(data.position_id);
             
-            // 今日の日付を追加
-            data.offer_sent_date = new Date().toISOString().split('T')[0];
-            
-            showAlert('info', 'オファー機能は実装予定です。候補者は内定段階に到達しています。');
-            
-            // フォームをリセット
-            e.target.reset();
-            toggleOfferForm();
-            loadOffers();
+            try {
+                // オファーを作成
+                const offerData = {
+                    candidate_id: candidateId,
+                    position_id: positionId,
+                    salary: salary,
+                    start_date: data.start_date,
+                    offer_date: new Date().toISOString().split('T')[0],
+                    response_deadline: data.response_deadline,
+                    status: '提示中'
+                };
+                
+                console.log('Creating offer with data:', offerData);
+                
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('offers')
+                    .insert([offerData]);
+                
+                if (error) throw error;
+                
+                // 候補者のステージを内定に更新（まだ内定ステージでない場合）
+                const candidateId = data.candidate_id;
+                const { data: stages, error: stageError } = await window.SUPABASE_CLIENT
+                    .from('recruitment_stages')
+                    .select('*')
+                    .eq('candidate_id', candidateId)
+                    .eq('stage', '内定');
+                
+                if (!stages || stages.length === 0) {
+                    // 内定ステージを作成
+                    await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .insert([{
+                            candidate_id: candidateId,
+                            stage: '内定',
+                            status: '進行中',
+                            scheduled_date: new Date().toISOString().split('T')[0]
+                        }]);
+                }
+                
+                showAlert('success', 'オファーを送信しました');
+                
+                // フォームをリセット
+                e.target.reset();
+                toggleOfferForm();
+                loadOffers();
+            } catch (error) {
+                showAlert('error', 'エラーが発生しました: ' + error.message);
+            }
         });
 
         // オファーステータス更新
-        function updateOfferStatus(candidateId, status) {
-            const statusText = status === 'accepted' ? '承諾' : '辞退';
-            if (confirm(`この内定を「${statusText}」として記録しますか？`)) {
-                showAlert('success', `内定${statusText}を記録しました`);
-                // 実際の実装では、APIを呼び出してステータスを更新
-                loadOffers();
+        async function updateOfferStatus(candidateId, status) {
+            const statusJp = status === 'accepted' ? '承諾' : '辞退';
+            if (confirm(`この内定を「${statusJp}」として記録しますか？`)) {
+                try {
+                    // offersテーブルのステータスを更新
+                    const { error: offerError } = await window.SUPABASE_CLIENT
+                        .from('offers')
+                        .update({ 
+                            status: statusJp,
+                            response_date: new Date().toISOString().split('T')[0]
+                        })
+                        .eq('candidate_id', candidateId);
+                    
+                    if (offerError) throw offerError;
+                    
+                    // recruitment_stagesも更新
+                    const stageStatus = status === 'accepted' ? '合格' : '不合格';
+                    const { error: stageError } = await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .update({ 
+                            status: stageStatus,
+                            completed_date: new Date().toISOString().split('T')[0]
+                        })
+                        .eq('candidate_id', candidateId)
+                        .eq('stage', '内定')
+                        .eq('status', '進行中');
+                    
+                    if (stageError) throw stageError;
+                    
+                    showAlert('success', `内定${statusText}を記録しました`);
+                    loadOffers();
+                } catch (error) {
+                    showAlert('error', 'エラーが発生しました: ' + error.message);
+                }
             }
         }
 
@@ -718,11 +828,26 @@
         }
 
         // オファー編集モーダルを開く
-        function editOffer(candidateId, salary, startDate, deadline) {
+        function editOffer(candidateId) {
+            const data = candidatesData[candidateId];
+            if (!data) {
+                showAlert('error', 'データが見つかりません');
+                return;
+            }
+            
+            const { offerData } = data;
             document.getElementById('edit_candidate_id').value = candidateId;
-            document.getElementById('edit_salary').value = salary;
-            document.getElementById('edit_start_date').value = startDate;
-            document.getElementById('edit_response_deadline').value = deadline;
+            
+            // データがない場合のデフォルト値
+            const today = new Date();
+            const oneMonthLater = new Date(today);
+            oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+            const oneWeekLater = new Date(today);
+            oneWeekLater.setDate(oneWeekLater.getDate() + 7);
+            
+            document.getElementById('edit_salary').value = offerData.salary || 500;
+            document.getElementById('edit_start_date').value = offerData.startDate || oneMonthLater.toISOString().split('T')[0];
+            document.getElementById('edit_response_deadline').value = offerData.deadline || oneWeekLater.toISOString().split('T')[0];
             document.getElementById('editModal').style.display = 'block';
         }
 
@@ -737,17 +862,67 @@
             e.preventDefault();
             
             const candidateId = document.getElementById('edit_candidate_id').value;
-            const salary = document.getElementById('edit_salary').value;
+            const salary = parseInt(document.getElementById('edit_salary').value) * 10000; // 万円→円
             const startDate = document.getElementById('edit_start_date').value;
             const deadline = document.getElementById('edit_response_deadline').value;
             
             try {
-                // 実際の実装では、ここでAPIを呼び出して更新
+                // offersテーブルを更新
+                const updateData = {
+                    salary: salary,
+                    start_date: startDate,
+                    response_deadline: deadline
+                };
+                
+                console.log('Updating offer for candidate', candidateId, 'with data:', updateData);
+                
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('offers')
+                    .update(updateData)
+                    .eq('candidate_id', candidateId);
+                
+                if (error) throw error;
+                
                 showAlert('success', '内定条件を更新しました');
                 closeEditModal();
                 loadOffers(); // リロード
             } catch (error) {
-                showAlert('error', 'エラーが発生しました: ' + error.message);
+                // オファーが存在しない場合は新規作成
+                if (error.code === 'PGRST116') {
+                    try {
+                        // 候補者の職種IDを取得
+                        const { data: candidate, error: candError } = await window.SUPABASE_CLIENT
+                            .from('candidates')
+                            .select('position_id')
+                            .eq('id', candidateId)
+                            .single();
+                        
+                        if (candError) throw candError;
+                        
+                        // 新規オファーを作成
+                        const { error: insertError } = await window.SUPABASE_CLIENT
+                            .from('offers')
+                            .insert([{
+                                candidate_id: candidateId,
+                                position_id: candidate.position_id,
+                                salary: salary,
+                                start_date: startDate,
+                                response_deadline: deadline,
+                                offer_date: new Date().toISOString().split('T')[0],
+                                status: '提示中'
+                            }]);
+                        
+                        if (insertError) throw insertError;
+                        
+                        showAlert('success', '内定条件を設定しました');
+                        closeEditModal();
+                        loadOffers();
+                    } catch (createError) {
+                        showAlert('error', 'エラーが発生しました: ' + createError.message);
+                    }
+                } else {
+                    showAlert('error', 'エラーが発生しました: ' + error.message);
+                }
             }
         });
 
