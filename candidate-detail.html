@@ -319,6 +319,14 @@
                         <p style="color: #999;">読み込み中...</p>
                     </div>
                 </div>
+                
+                <!-- 適性検査結果 -->
+                <div class="card">
+                    <h2>適性検査結果</h2>
+                    <div id="aptitudeTestResults">
+                        <p style="color: #999;">読み込み中...</p>
+                    </div>
+                </div>
             </div>
 
             <!-- サイドバー -->
@@ -396,6 +404,7 @@
                 displayCandidateInfo(candidate);
                 loadSelectionProcess(candidate);
                 loadEvaluations(candidate);
+                loadAptitudeTests(candidate);
                 updateCurrentStatus(candidate);
 
             } catch (error) {
@@ -455,36 +464,144 @@
         // 面接評価の読み込み
         async function loadEvaluations(candidate) {
             try {
-                // ここでは仮の評価データを表示
-                const evaluationHtml = `
-                    <div class="evaluation-card">
-                        <h3>一次面接</h3>
-                        <div class="score-grid">
-                            <div class="score-item">
-                                <div class="score-value">4</div>
-                                <div class="score-label">技術力</div>
+                // Supabaseから評価データを取得
+                const { data: evaluations, error } = await window.SUPABASE_CLIENT
+                    .from('evaluations')
+                    .select(`
+                        *,
+                        users(name),
+                        recruitment_stages(stage)
+                    `)
+                    .eq('candidate_id', candidate.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!evaluations || evaluations.length === 0) {
+                    document.getElementById('evaluationsList').innerHTML = 
+                        '<p style="text-align: center; color: #666;">まだ評価がありません</p>';
+                    return;
+                }
+                
+                const evaluationHtml = evaluations.map(eval => {
+                    const stageName = eval.recruitment_stages?.stage || '面接';
+                    const evaluatorName = eval.users?.name || '評価者不明';
+                    
+                    return `
+                        <div class="evaluation-card">
+                            <h3>${stageName}</h3>
+                            <div class="score-grid">
+                                <div class="score-item">
+                                    <div class="score-value">${eval.technical_score || '-'}</div>
+                                    <div class="score-label">技術力</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-value">${eval.communication_score || '-'}</div>
+                                    <div class="score-label">コミュニケーション</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-value">${eval.cultural_fit_score || '-'}</div>
+                                    <div class="score-label">カルチャーフィット</div>
+                                </div>
+                                <div class="score-item">
+                                    <div class="score-value">${eval.overall_score || '-'}</div>
+                                    <div class="score-label">総合評価</div>
+                                </div>
                             </div>
-                            <div class="score-item">
-                                <div class="score-value">5</div>
-                                <div class="score-label">コミュニケーション</div>
+                            <div class="notes-section">
+                                <strong>評価者:</strong> ${evaluatorName}<br>
+                                <strong>推薦度:</strong> ${eval.recommendation || '未設定'}<br>
+                                ${eval.strengths ? `<strong>強み:</strong> ${eval.strengths}<br>` : ''}
+                                ${eval.weaknesses ? `<strong>課題:</strong> ${eval.weaknesses}<br>` : ''}
+                                ${eval.notes ? `<strong>メモ:</strong> ${eval.notes}` : ''}
                             </div>
-                            <div class="score-item">
-                                <div class="score-value">4</div>
-                                <div class="score-label">カルチャーフィット</div>
+                            <div style="text-align: right; color: #999; font-size: 0.9em; margin-top: 10px;">
+                                ${new Date(eval.created_at).toLocaleDateString('ja-JP')}
                             </div>
                         </div>
-                        <div class="notes-section">
-                            <strong>評価者:</strong> 山田太郎<br>
-                            <strong>総合評価:</strong> 推薦
-                        </div>
-                    </div>
-                `;
+                    `;
+                }).join('');
+                
                 document.getElementById('evaluationsList').innerHTML = evaluationHtml;
+                
             } catch (error) {
                 console.error('Error loading evaluations:', error);
+                document.getElementById('evaluationsList').innerHTML = 
+                    '<p style="color: red;">評価データの読み込みに失敗しました</p>';
             }
         }
 
+        // 適性検査結果の読み込み
+        async function loadAptitudeTests(candidate) {
+            try {
+                const { data: tests, error } = await window.SUPABASE_CLIENT
+                    .from('aptitude_tests')
+                    .select('*')
+                    .eq('candidate_id', candidate.id)
+                    .order('conducted_date', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!tests || tests.length === 0) {
+                    document.getElementById('aptitudeTestResults').innerHTML = 
+                        '<p style="text-align: center; color: #666;">適性検査未実施</p>';
+                    return;
+                }
+                
+                const testHtml = tests.map(test => {
+                    const subScores = test.sub_scores || {};
+                    const scorePercentage = test.max_score ? Math.round((test.score / test.max_score) * 100) : 0;
+                    
+                    return `
+                        <div class="evaluation-card">
+                            <h3>${test.test_type || '適性検査'}</h3>
+                            <div style="text-align: center; margin: 20px 0;">
+                                <div style="font-size: 2.5em; font-weight: bold; color: ${scorePercentage >= 70 ? '#28a745' : scorePercentage >= 50 ? '#ffc107' : '#dc3545'};">
+                                    ${test.score || 0}
+                                </div>
+                                <div style="color: #666;">
+                                    / ${test.max_score || 100} 点
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <div style="width: 100%; background: #e9ecef; border-radius: 10px; height: 20px; overflow: hidden;">
+                                        <div style="width: ${scorePercentage}%; background: ${scorePercentage >= 70 ? '#28a745' : scorePercentage >= 50 ? '#ffc107' : '#dc3545'}; height: 100%; transition: width 0.3s;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${Object.keys(subScores).length > 0 ? `
+                                <div style="margin-top: 20px;">
+                                    <strong>詳細スコア:</strong>
+                                    <div style="margin-top: 10px;">
+                                        ${Object.entries(subScores).map(([key, value]) => `
+                                            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                                                <span>${key}:</span>
+                                                <span style="font-weight: bold;">${value}</span>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${test.notes ? `
+                                <div style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                                    <strong>メモ:</strong> ${test.notes}
+                                </div>
+                            ` : ''}
+                            <div style="text-align: right; color: #999; font-size: 0.9em; margin-top: 10px;">
+                                実施日: ${new Date(test.conducted_date).toLocaleDateString('ja-JP')}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                document.getElementById('aptitudeTestResults').innerHTML = testHtml;
+                
+            } catch (error) {
+                console.error('Error loading aptitude tests:', error);
+                document.getElementById('aptitudeTestResults').innerHTML = 
+                    '<p style="color: red;">適性検査データの読み込みに失敗しました</p>';
+            }
+        }
+        
         // 現在のステータス更新
         function updateCurrentStatus(candidate) {
             const currentStages = candidate.recruitment_stages?.filter(s => s.status === '進行中') || [];
