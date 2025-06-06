@@ -516,6 +516,8 @@
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
             
+            console.log('Form data:', data);
+            
             // 数値変換
             ['technical_score', 'communication_score', 'cultural_fit_score'].forEach(field => {
                 if (data[field]) data[field] = parseInt(data[field]);
@@ -527,22 +529,33 @@
             );
 
             // 現在のステージIDを取得
-            const { data: stage, error: stageError } = await window.SUPABASE_CLIENT
-                .from('recruitment_stages')
-                .select('id')
-                .eq('candidate_id', data.candidate_id)
-                .eq('stage', data.interview_stage)
-                .eq('status', '進行中')
-                .single();
-            
-            if (stageError) {
-                showAlert('error', 'ステージ情報の取得に失敗しました');
+            try {
+                const { data: stages, error: stageError } = await window.SUPABASE_CLIENT
+                    .from('recruitment_stages')
+                    .select('id')
+                    .eq('candidate_id', data.candidate_id)
+                    .eq('stage', data.interview_stage)
+                    .eq('status', '進行中');
+                
+                if (stageError) {
+                    console.error('Stage query error:', stageError);
+                    showAlert('error', 'ステージ情報の取得に失敗しました: ' + stageError.message);
+                    return;
+                }
+                
+                if (!stages || stages.length === 0) {
+                    showAlert('error', '現在進行中の' + data.interview_stage + 'ステージが見つかりません');
+                    return;
+                }
+                
+                data.stage_id = stages[0].id;
+                // data.interviewer_id = 1; // interviewer_idは省略（NULL許可）
+                delete data.interview_stage; // 不要なフィールドを削除
+            } catch (error) {
+                console.error('Stage fetch error:', error);
+                showAlert('error', 'ステージ情報の取得中にエラーが発生しました');
                 return;
             }
-
-            data.stage_id = stage.id;
-            // data.interviewer_id = 1; // interviewer_idは省略（NULL許可）
-            delete data.interview_stage; // 不要なフィールドを削除
             
             try {
                 const { error } = await window.SUPABASE_CLIENT

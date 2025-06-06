@@ -175,6 +175,9 @@
         .btn-small.btn-info {
             background-color: #17a2b8;
         }
+        .btn-small.btn-danger {
+            background-color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -409,6 +412,7 @@
                                     <button class="btn-small btn-info" onclick="viewCandidate(${c.id})">詳細</button>
                                     <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
                                     <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
+                                    <button class="btn-small btn-danger" onclick="deleteCandidate(${c.id})">削除</button>
                                 </td>
                             </tr>
                         `}).join('')}
@@ -479,6 +483,28 @@
                 loadCandidates();
             } catch (error) {
                 showAlert('error', 'エラーが発生しました: ' + error.message);
+            }
+        }
+
+        // 候補者削除
+        async function deleteCandidate(candidateId) {
+            if (!confirm('この候補者を削除しますか？この操作は取り消せません。')) {
+                return;
+            }
+            
+            try {
+                // 関連するデータはカスケード削除されるので、候補者のみ削除
+                const { error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .delete()
+                    .eq('id', candidateId);
+                
+                if (error) throw error;
+                
+                showAlert('success', '候補者を削除しました');
+                loadCandidates();
+            } catch (error) {
+                showAlert('error', '削除エラー: ' + error.message);
             }
         }
 
