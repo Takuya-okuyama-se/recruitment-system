@@ -471,24 +471,36 @@
         // ステージデータの読み込み
         async function loadStageData() {
             try {
-                // ステージ概要を取得
-                const overviewRes = await fetch(`/api/recruitment/overview`);
-                const overviewData = await overviewRes.json();
+                // Supabaseから候補者データを取得
+                const { data: candidates, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select(`
+                        *,
+                        positions(title),
+                        recruitment_stages(stage, status, scheduled_date, completed_date)
+                    `);
                 
-                // 現在のステージデータを抽出
-                const stageData = overviewData.stages.find(s => s.name === currentStage);
-                const durationData = overviewData.durations.find(d => d.stage_name === currentStage);
-                
-                updateHeader(stageData, durationData);
-                
-                // 候補者一覧を取得
-                const candidatesRes = await window.SUPABASE_CLIENT.from("candidates").select("*");
-                const candidatesData = await candidatesRes.json();
+                if (error) throw error;
                 
                 // 現在のステージの候補者をフィルタ
-                allCandidates = candidatesData.candidates.filter(c => 
-                    c.current_stage === currentStage && c.stage_status === 'in_progress'
+                allCandidates = (candidates || []).filter(c => 
+                    c.recruitment_stages?.some(s => 
+                        s.stage === currentStage && s.status === '進行中'
+                    )
                 );
+                
+                // ステージ統計を計算
+                const stageData = {
+                    name: currentStage,
+                    total_candidates: allCandidates.length,
+                    pass_rate: 70 // ダミーデータ
+                };
+                
+                const durationData = {
+                    average_days: 5 // ダミーデータ
+                };
+                
+                updateHeader(stageData, durationData);
                 
                 displayCandidates(allCandidates);
                 updateStageProgress(stageData);
@@ -547,9 +559,9 @@
                 
                 return `
                     <tr>
-                        <td><strong>${c.last_name} ${c.first_name}</strong></td>
-                        <td>${c.position_title || '未設定'}</td>
-                        <td>${c.department_name || '未設定'}</td>
+                        <td><strong>${c.name}</strong></td>
+                        <td>${c.positions?.title || '未設定'}</td>
+                        <td>${c.email || '未設定'}</td>
                         <td><span class="time-badge ${timeClass}">${days}日</span></td>
                         <td>
                             <button class="btn action-btn btn-success" onclick="processCandidate(${c.id}, 'pass')">

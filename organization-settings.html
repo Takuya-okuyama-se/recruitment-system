@@ -549,7 +549,7 @@
                     .select('*, positions(id, target_count)');
                 if (error) throw error;
                 
-                document.getElementById('totalDepartments').textContent = departments.length;
+                document.getElementById('totalDepartments').textContent = departments ? departments.length : 0;
                 
                 const totalTarget = departments.reduce((sum, dept) => sum + (dept.positions?.reduce((s, p) => s + (p.target_count || 0), 0) || 0), 0);
                 const totalHired = 0; // 一旦0に設定
@@ -696,6 +696,7 @@
 
         // 部門モーダル表示
         function showDepartmentModal() {
+            console.log('Opening department modal');
             document.getElementById('departmentModal').style.display = 'flex';
             document.getElementById('departmentModalTitle').textContent = '部門を追加';
             document.getElementById('departmentForm').reset();
@@ -763,16 +764,24 @@
                     `/api/organization/departments`;
                 
                 if (id) {
-                    const { error } = await window.SUPABASE_CLIENT
+                    const { data: updatedData, error } = await window.SUPABASE_CLIENT
                         .from('departments')
                         .update(data)
-                        .eq('id', id);
-                    if (error) throw error;
+                        .eq('id', id)
+                        .select();
+                    if (error) {
+                        console.error('Update error:', error);
+                        throw error;
+                    }
                 } else {
-                    const { error } = await window.SUPABASE_CLIENT
+                    const { data: insertedData, error } = await window.SUPABASE_CLIENT
                         .from('departments')
-                        .insert([data]);
-                    if (error) throw error;
+                        .insert([data])
+                        .select();
+                    if (error) {
+                        console.error('Insert error:', error);
+                        throw error;
+                    }
                 }
                 
                 showAlert('success', '部門を保存しました');
