@@ -251,7 +251,7 @@
                     console.log(`Stage ${stage}: 進行中=${inProgressCount}, 合格=${passedCount}`);
                 }
 
-                displayFunnel(funnelData, funnelDetail);
+                displayFunnel(funnelData);
 
                 // 部署別進捗
                 const { data: positions, error: posError } = await window.SUPABASE_CLIENT
@@ -286,23 +286,19 @@
         }
 
         // 採用ファネルの表示
-        function displayFunnel(data, detail) {
+        function displayFunnel(data) {
             const funnelDiv = document.getElementById('funnel');
             funnelDiv.innerHTML = '';
 
             const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
             stages.forEach(stage => {
                 const count = data[stage] || 0;
-                const stageDetail = detail && detail[stage] ? detail[stage] : { inProgress: 0, passed: 0 };
                 const stageDiv = document.createElement('div');
                 stageDiv.className = 'funnel-stage';
                 stageDiv.onclick = () => window.location.href = `stage-detail.html?stage=${encodeURIComponent(stage)}`;
                 stageDiv.innerHTML = `
                     <span>${stage}</span>
                     <span class="stage-count">${count}名</span>
-                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                        進行中: ${stageDetail.inProgress} / 合格: ${stageDetail.passed}
-                    </div>
                 `;
                 funnelDiv.appendChild(stageDiv);
             });
