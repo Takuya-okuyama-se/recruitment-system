@@ -1,16 +1,16 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/",
-      "dest": "/demo.html"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "src": "/demo",
-      "dest": "/demo.html"
+      "source": "/demo",
+      "destination": "/demo.html"
     },
     {
-      "src": "/dashboard",
-      "dest": "/dashboard.html"
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
     }
   ],
   "headers": [
