@@ -327,9 +327,88 @@ nav > div {
     color: white;
 }
 
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 .btn-danger {
     background: var(--danger-color);
     color: white;
+}
+
+.btn-danger:hover {
+    background: #DC2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* 合格・不合格ボタン専用スタイル */
+.btn-pass,
+button[onclick*="pass"],
+button:contains("合格"),
+.action-buttons button:nth-of-type(2) {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-pass:hover,
+button[onclick*="pass"]:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-fail,
+button[onclick*="fail"],
+button:contains("不合格") {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+.btn-fail:hover,
+button[onclick*="fail"]:hover {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 小さいボタン用の合格・不合格スタイル */
+.btn-small.btn-success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+    color: white !important;
+}
+
+.btn-small.btn-success:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-small.btn-danger {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+    color: white !important;
+}
+
+.btn-small.btn-danger:hover {
+    background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 削除ボタン専用スタイル */
+.btn-small.btn-delete {
+    background: linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%) !important;
+    color: white !important;
+}
+
+.btn-small.btn-delete:hover {
+    background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.4) !important;
 }
 
 /* ========== フォーム要素 ========== */

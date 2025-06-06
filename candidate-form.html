@@ -373,10 +373,10 @@
                                 <td class="action-buttons">
                                     <button class="btn-small btn-info" onclick="viewCandidate(${c.id})">詳細</button>
                                     ${!isRejected ? `
-                                        <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
-                                        <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
+                                        <button class="btn-small btn-success" onclick="advanceStage(${c.id}, 'pass')">合格</button>
+                                        <button class="btn-small btn-danger" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
                                     ` : ''}
-                                    <button class="btn-small btn-danger" onclick="deleteCandidate(${c.id})">削除</button>
+                                    <button class="btn-small btn-delete" onclick="deleteCandidate(${c.id})">削除</button>
                                 </td>
                             </tr>
                         `}).join('')}
