@@ -822,17 +822,54 @@
                 if (fetchError) throw fetchError;
                 
                 // 現在のステージを更新
-                const currentStageRecord = candidate.recruitment_stages.find(s => s.stage === currentStage);
-                if (currentStageRecord) {
+                const currentStageRecord = candidate.recruitment_stages.find(s => 
+                    s.stage === currentStage && s.status === '進行中'
+                );
+                
+                if (!currentStageRecord) {
+                    throw new Error('進行中のステージが見つかりません');
+                }
+                
+                if (action === 'fail') {
+                    // 不合格にする
                     const { error: updateError } = await window.SUPABASE_CLIENT
                         .from('recruitment_stages')
                         .update({ 
-                            status: action === 'pass' ? '合格' : '不合格',
+                            status: '不合格',
                             completed_date: new Date().toISOString().split('T')[0]
                         })
                         .eq('id', currentStageRecord.id);
                         
                     if (updateError) throw updateError;
+                } else {
+                    // 合格にして次のステージへ
+                    const stageOrder = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
+                    const currentIndex = stageOrder.indexOf(currentStage);
+                    
+                    // 現在のステージを完了
+                    const { error: updateError } = await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .update({ 
+                            status: '合格',
+                            completed_date: new Date().toISOString().split('T')[0]
+                        })
+                        .eq('id', currentStageRecord.id);
+                        
+                    if (updateError) throw updateError;
+                    
+                    // 次のステージがある場合は作成
+                    if (currentIndex < stageOrder.length - 1) {
+                        const { error: insertError } = await window.SUPABASE_CLIENT
+                            .from('recruitment_stages')
+                            .insert([{
+                                candidate_id: candidateId,
+                                stage: stageOrder[currentIndex + 1],
+                                status: '進行中',
+                                scheduled_date: new Date().toISOString().split('T')[0]
+                            }]);
+                            
+                        if (insertError) throw insertError;
+                    }
                 }
                 
                 alert(`${actionText}として記録しました`);

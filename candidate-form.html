@@ -402,17 +402,47 @@
                     <tbody>
                         ${candidates.map(c => {
                             const currentStage = c.recruitment_stages?.find(s => s.status === '進行中');
+                            const latestStage = c.recruitment_stages?.sort((a, b) => 
+                                new Date(b.created_at || b.id) - new Date(a.created_at || a.id)
+                            )[0];
+                            
+                            let stageDisplay = '';
+                            let stageBadgeClass = '';
+                            
+                            if (currentStage) {
+                                // 進行中のステージがある場合
+                                stageDisplay = currentStage.stage;
+                                stageBadgeClass = `stage-badge stage-${currentStage.stage}`;
+                            } else if (latestStage) {
+                                // 進行中のステージがない場合は最新のステージを表示
+                                if (latestStage.status === '不合格') {
+                                    stageDisplay = `${latestStage.stage} (不合格)`;
+                                    stageBadgeClass = 'stage-badge' + ' style="background-color: #f8d7da; color: #721c24;"';
+                                } else if (latestStage.status === '合格') {
+                                    stageDisplay = `${latestStage.stage} (完了)`;
+                                    stageBadgeClass = 'stage-badge' + ' style="background-color: #d4edda; color: #155724;"';
+                                }
+                            } else {
+                                stageDisplay = '未開始';
+                                stageBadgeClass = 'stage-badge';
+                            }
+                            
+                            // 不合格者の場合はアクションボタンを制限
+                            const isRejected = latestStage && latestStage.status === '不合格';
+                            
                             return `
                             <tr>
                                 <td>${c.name}</td>
                                 <td>${c.email}</td>
                                 <td>${c.positions?.title || '未設定'}</td>
-                                <td><span class="stage-badge stage-${currentStage?.stage || '書類選考'}">${currentStage?.stage || '書類選考'}</span></td>
+                                <td><span class="${stageBadgeClass}">${stageDisplay}</span></td>
                                 <td>${new Date(c.created_at).toLocaleDateString('ja-JP')}</td>
                                 <td class="action-buttons">
                                     <button class="btn-small btn-info" onclick="viewCandidate(${c.id})">詳細</button>
-                                    <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
-                                    <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
+                                    ${!isRejected ? `
+                                        <button class="btn-small" onclick="advanceStage(${c.id}, 'pass')">合格</button>
+                                        <button class="btn-small btn-secondary" onclick="advanceStage(${c.id}, 'fail')">不合格</button>
+                                    ` : ''}
                                     <button class="btn-small btn-danger" onclick="deleteCandidate(${c.id})">削除</button>
                                 </td>
                             </tr>
