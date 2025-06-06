@@ -124,6 +124,12 @@
         // グローバルに保存
         window._originalBodyDisplay = originalBodyDisplay;
         
+        // デバッグログ
+        console.log('🔐 Showing login screen, hiding body', {
+            originalDisplay: originalBodyDisplay,
+            currentDisplay: document.body.style.display
+        });
+        
         // ログイン画面HTML
         const loginHTML = `
             <div style="
@@ -206,6 +212,12 @@
         
         // ログイン画面を挿入
         document.body.insertAdjacentHTML('beforeend', loginHTML);
+        
+        // ログイン画面は常に表示されるようにする
+        const loginScreen = document.getElementById('loginScreen');
+        if (loginScreen) {
+            loginScreen.style.display = 'flex';
+        }
         
         // フォーカス設定
         setTimeout(() => {
@@ -443,7 +455,7 @@
         console.log(`🔐 Auth system ready (${isDemoMode() ? 'demo' : 'admin'} mode)`);
     }
     
-    // グローバル関数としてエクスポート
+    // グローバル関数としてエクスポート（即座に設定）
     window.AuthSystem = {
         logout,
         isDemoMode,
