@@ -6,6 +6,7 @@
     <title>ステージ詳細 - 採用管理システム</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -405,7 +406,7 @@
                             <tr>
                                 <th>氏名</th>
                                 <th>応募職種</th>
-                                <th>部門</th>
+                                <th>メール</th>
                                 <th>滞在日数</th>
                                 <th>アクション</th>
                             </tr>
@@ -470,6 +471,7 @@
 
         // ステージデータの読み込み
         async function loadStageData() {
+            console.log('Loading stage data for:', currentStage);
             try {
                 // Supabaseから候補者データを取得
                 const { data: candidates, error } = await window.SUPABASE_CLIENT
@@ -480,7 +482,12 @@
                         recruitment_stages(stage, status, scheduled_date, completed_date)
                     `);
                 
-                if (error) throw error;
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error;
+                }
+                
+                console.log('Candidates loaded:', candidates);
                 
                 // 現在のステージの候補者をフィルタ
                 allCandidates = (candidates || []).filter(c => 
@@ -488,6 +495,8 @@
                         s.stage === currentStage && s.status === '進行中'
                     )
                 );
+                
+                console.log('Filtered candidates:', allCandidates);
                 
                 // ステージ統計を計算
                 const stageData = {
@@ -647,6 +656,12 @@
 
         // 時間分析チャート
         function updateTimeChart() {
+            // Chart.jsが読み込まれていない場合はスキップ
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js is not loaded');
+                return;
+            }
+            
             const ctx = document.getElementById('timeChart').getContext('2d');
             
             if (timeChart) {
@@ -729,19 +744,35 @@
             }
             
             try {
-                const response = await fetch(`/api/candidates/${candidateId}/advance-stage`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ action })
-                });
+                // 現在のステージを取得
+                const { data: candidate, error: fetchError } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select('*, recruitment_stages(*)')
+                    .eq('id', candidateId)
+                    .single();
+                    
+                if (fetchError) throw fetchError;
                 
-                if (response.ok) {
-                    loadStageData();
+                // 現在のステージを更新
+                const currentStageRecord = candidate.recruitment_stages.find(s => s.stage === currentStage);
+                if (currentStageRecord) {
+                    const { error: updateError } = await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .update({ 
+                            status: action === 'pass' ? '合格' : '不合格',
+                            completed_date: new Date().toISOString().split('T')[0]
+                        })
+                        .eq('id', currentStageRecord.id);
+                        
+                    if (updateError) throw updateError;
                 }
+                
+                alert(`${actionText}として記録しました`);
+                loadStageData();
+                
             } catch (error) {
                 console.error('Error processing candidate:', error);
+                alert('エラーが発生しました');
             }
         }
 
