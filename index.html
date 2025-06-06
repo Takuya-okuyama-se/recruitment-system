@@ -193,6 +193,15 @@
     </div>
 
     <script>
+        // デモパラメータがある場合はdemo.htmlにリダイレクト
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('demo')) {
+            window.location.href = 'demo.html';
+        }
+
+        // API_BASEの定義
+        const API_BASE = 'http://localhost:5000';
+
         // Supabaseクライアントはsupabase-config.jsで定義済み
 
         async function fetchData(endpoint) {
