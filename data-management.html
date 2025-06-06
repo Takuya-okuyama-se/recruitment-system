@@ -494,12 +494,10 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.durations.map(d => `
+                                ${stages.map(s => `
                                     <tr>
-                                        <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">${d.stage_name}</td>
-                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #dee2e6;">
-                                            ${d.avg_days ? parseFloat(d.avg_days).toFixed(1) : '-'}日
-                                        </td>
+                                        <td style="padding: 10px; border-bottom: 1px solid #dee2e6;">${s.stage || '-'}</td>
+                                        <td style="padding: 10px; text-align: right; border-bottom: 1px solid #dee2e6;">-日</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -523,7 +521,11 @@
             try {
                 // サンプルデータSQLを実行
                 showAlert('info', 'この機能はSupabase版では利用できません');
-return;
+                return;
+            } catch (error) {
+                console.error(error);
+            } catch (error) {
+                console.error('エラー:', error);
             }
                 
                 if (!response.ok) {
@@ -558,7 +560,11 @@ return;
             
             try {
                 showAlert('info', 'この機能はSupabase版では利用できません');
-return;
+                return;
+            } catch (error) {
+                console.error(error);
+            } catch (error) {
+                console.error('エラー:', error);
             }
                 
                 if (!response.ok) {
@@ -587,6 +593,8 @@ return;
             try {
                 showAlert('info', 'この機能はSupabase版では利用できません');
 return;
+            } catch (error) {
+                console.error(error);
             }
                 
                 if (!response.ok) {

@@ -471,11 +471,18 @@
         async function loadOffers() {
             try {
                 // 内定段階の候補者を取得
-                const { data, error } = await window.SUPABASE_CLIENT.from("candidates").select("*");
-if (error) throw error;
+                const { data: candidates, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select(`
+                        *,
+                        positions(title),
+                        recruitment_stages(stage, status)
+                    `);
                 
-                const offerCandidates = data.candidates.filter(c => 
-                    c.current_stage === '内定' && c.stage_status === 'passed'
+                if (error) throw error;
+                
+                const offerCandidates = (candidates || []).filter(c => 
+                    c.recruitment_stages?.some(s => s.stage === '内定' && s.status === '進行中')
                 );
                 
                 displayOffers(offerCandidates);
@@ -511,8 +518,8 @@ if (error) throw error;
                         </div>
                         
                         <div class="candidate-info">
-                            <div class="candidate-name">${c.last_name} ${c.first_name}</div>
-                            <div class="position-title">${c.position_title || '未設定'}</div>
+                            <div class="candidate-name">${c.name}</div>
+                            <div class="position-title">${c.positions?.title || '未設定'}</div>
                         </div>
                         
                         <div class="offer-details">
@@ -603,19 +610,24 @@ if (error) throw error;
         // フォーム用の候補者読み込み
         async function loadCandidatesForForm() {
             try {
-                const { data, error } = await window.SUPABASE_CLIENT.from("candidates").select("*");
-if (error) throw error;
+                const { data: candidates, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select('*, positions(title), recruitment_stages(stage, status)');
+                
+                if (error) throw error;
                 
                 // 最終面接を通過した候補者
-                const eligibleCandidates = data.candidates.filter(c => 
-                    (c.current_stage === '最終面接' && c.stage_status === 'passed') ||
-                    (c.current_stage === '内定')
+                const eligibleCandidates = (candidates || []).filter(c => 
+                    c.recruitment_stages?.some(s => 
+                        (s.stage === '最終面接' && s.status === '合格') ||
+                        (s.stage === '内定')
+                    )
                 );
 
                 const select = document.getElementById('candidate_select');
                 select.innerHTML = '<option value="">選択してください</option>' +
                     eligibleCandidates.map(c => 
-                        `<option value="${c.id}">${c.last_name} ${c.first_name} - ${c.position_title || '未設定'}</option>`
+                        `<option value="${c.id}">${c.name} - ${c.positions?.title || '未設定'}</option>`
                     ).join('');
             } catch (error) {
                 console.error('Error loading candidates:', error);
