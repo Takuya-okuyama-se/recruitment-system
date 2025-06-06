@@ -40,8 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
         navDiv.innerHTML = '';
         
         // モバイルヘッダーとハンバーガーを追加
+        mobileHeader.appendChild(hamburger); // ハンバーガーをモバイルヘッダー内に移動
         navDiv.appendChild(mobileHeader);
-        navDiv.appendChild(hamburger);
         
         // nav-linksクラスのdivを作成
         const navLinks = document.createElement('div');
