@@ -1,19 +1,4 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "**/*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "**/*.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "**/*.css",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
       "src": "/",
@@ -26,10 +11,6 @@
     {
       "src": "/dashboard",
       "dest": "/dashboard.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
     }
   ],
   "headers": [
@@ -49,21 +30,10 @@
           "value": "1; mode=block"
         },
         {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
           "key": "Content-Security-Policy",
           "value": "default-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://*.supabase.co; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com"
         }
       ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/admin",
-      "destination": "/dashboard.html",
-      "permanent": false
     }
   ]
 }
