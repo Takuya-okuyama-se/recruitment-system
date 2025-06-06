@@ -771,13 +771,13 @@
                 
                 if (id) {
                     const { error } = await window.SUPABASE_CLIENT
-                        .from('positions')
+                        .from('departments')
                         .update(data)
                         .eq('id', id);
                     if (error) throw error;
                 } else {
                     const { error } = await window.SUPABASE_CLIENT
-                        .from('positions')
+                        .from('departments')
                         .insert([data]);
                     if (error) throw error;
                 }
@@ -813,13 +813,13 @@
                 
                 if (id) {
                     const { error } = await window.SUPABASE_CLIENT
-                        .from('departments')
+                        .from('positions')
                         .update(data)
                         .eq('id', id);
                     if (error) throw error;
                 } else {
                     const { error } = await window.SUPABASE_CLIENT
-                        .from('departments')
+                        .from('positions')
                         .insert([data]);
                     if (error) throw error;
                 }
@@ -848,9 +848,6 @@
                     .eq('id', id);
                 if (error) throw error;
                 
-                if (!response.ok) {
-                    throw new Error('部門の削除に失敗しました');
-                }
                 
                 showAlert('success', '部門を削除しました');
                 loadDepartments();
@@ -875,9 +872,6 @@
                     .eq('id', id);
                 if (error) throw error;
                 
-                if (!response.ok) {
-                    throw new Error('職種の削除に失敗しました');
-                }
                 
                 showAlert('success', '職種を削除しました');
                 loadPositions();

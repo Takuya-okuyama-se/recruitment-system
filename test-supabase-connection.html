@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        async function testConnection() {
+            const results = document.getElementById('results');
+            
+            try {
+                // 部門データのテスト
+                const { data: departments, error: deptError } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .select('*');
+                
+                if (deptError) {
+                    results.innerHTML += `<p style="color: red;">Departments Error: ${deptError.message}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">Departments: ${departments.length} records found</p>`;
+                }
+                
+                // 職種データのテスト
+                const { data: positions, error: posError } = await window.SUPABASE_CLIENT
+                    .from('positions')
+                    .select('*');
+                
+                if (posError) {
+                    results.innerHTML += `<p style="color: red;">Positions Error: ${posError.message}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">Positions: ${positions.length} records found</p>`;
+                }
+                
+                // 新規部門の追加テスト
+                const testDept = {
+                    name: 'テスト部門',
+                    code: 'TEST',
+                    description: 'テスト用の部門'
+                };
+                
+                const { data: newDept, error: insertError } = await window.SUPABASE_CLIENT
+                    .from('departments')
+                    .insert([testDept])
+                    .select();
+                
+                if (insertError) {
+                    results.innerHTML += `<p style="color: red;">Insert Test Error: ${insertError.message}</p>`;
+                } else {
+                    results.innerHTML += `<p style="color: green;">Insert Test: Success - ID: ${newDept[0].id}</p>`;
+                    
+                    // 削除テスト
+                    const { error: deleteError } = await window.SUPABASE_CLIENT
+                        .from('departments')
+                        .delete()
+                        .eq('id', newDept[0].id);
+                    
+                    if (deleteError) {
+                        results.innerHTML += `<p style="color: red;">Delete Test Error: ${deleteError.message}</p>`;
+                    } else {
+                        results.innerHTML += `<p style="color: green;">Delete Test: Success</p>`;
+                    }
+                }
+                
+            } catch (error) {
+                results.innerHTML += `<p style="color: red;">General Error: ${error.message}</p>`;
+            }
+        }
+        
+        // ページ読み込み時にテスト実行
+        testConnection();
+    </script>
+</body>
+</html>

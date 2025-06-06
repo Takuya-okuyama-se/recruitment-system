@@ -521,31 +521,10 @@
             try {
                 // サンプルデータSQLを実行
                 showAlert('info', 'この機能はSupabase版では利用できません');
+                hideLoading();
                 return;
             } catch (error) {
-                console.error(error);
-            } catch (error) {
                 console.error('エラー:', error);
-            }
-                
-                if (!response.ok) {
-                    throw new Error('サンプルデータの投入に失敗しました');
-                }
-                
-                showAlert('success', 'サンプルデータを正常に投入しました！');
-                
-                // データ統計を更新
-                loadDataStats();
-                loadDepartmentProgress();
-                loadTimeAnalysis();
-                
-            } catch (error) {
-                console.error('エラー:', error);
-                showAlert('warning', 'サンプルデータの投入に失敗しました。手動でSQLを実行してください。');
-                
-                // 手動実行の案内
-                showManualInstructions();
-            } finally {
                 hideLoading();
             }
         }
@@ -560,28 +539,10 @@
             
             try {
                 showAlert('info', 'この機能はSupabase版では利用できません');
+                hideLoading();
                 return;
             } catch (error) {
-                console.error(error);
-            } catch (error) {
                 console.error('エラー:', error);
-            }
-                
-                if (!response.ok) {
-                    throw new Error('データのクリアに失敗しました');
-                }
-                
-                showAlert('success', 'すべてのデータをクリアしました。');
-                
-                // データ統計を更新
-                loadDataStats();
-                loadDepartmentProgress();
-                loadTimeAnalysis();
-                
-            } catch (error) {
-                console.error('エラー:', error);
-                showAlert('warning', 'データのクリアに失敗しました。手動でクリアしてください。');
-            } finally {
                 hideLoading();
             }
         }
@@ -592,24 +553,10 @@
             
             try {
                 showAlert('info', 'この機能はSupabase版では利用できません');
-return;
-            } catch (error) {
-                console.error(error);
-            }
-                
-                if (!response.ok) {
-                    throw new Error('処理時間の更新に失敗しました');
-                }
-                
-                showAlert('success', '処理時間を更新しました。');
-                
-                // 時間分析を更新
-                loadTimeAnalysis();
-                
+                hideLoading();
+                return;
             } catch (error) {
                 console.error('エラー:', error);
-                showAlert('info', 'APIエンドポイントがまだ実装されていません。');
-            } finally {
                 hideLoading();
             }
         }
