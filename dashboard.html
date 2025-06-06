@@ -221,35 +221,35 @@
                 // 採用ファネルデータ
                 const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
                 const funnelData = {};
-                const funnelDetail = {};
 
+                // 全候補者の現在のステージを取得
+                const { data: allCandidates, error: candError } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select(`
+                        id,
+                        recruitment_stages(stage, status, created_at)
+                    `);
+                
+                if (candError) throw candError;
+                
+                // 各ステージの人数をカウント
                 for (const stage of stages) {
-                    // 進行中の候補者
-                    const { data: inProgress, error: err1 } = await window.SUPABASE_CLIENT
-                        .from('recruitment_stages')
-                        .select('id, candidate_id')
-                        .eq('stage', stage)
-                        .eq('status', '進行中');
-                    
-                    // 合格した候補者（次のステージに進んだ）
-                    const { data: passed, error: err2 } = await window.SUPABASE_CLIENT
-                        .from('recruitment_stages')
-                        .select('id, candidate_id')
-                        .eq('stage', stage)
-                        .eq('status', '合格');
-                    
-                    if (err1) throw err1;
-                    if (err2) throw err2;
-                    
-                    const inProgressCount = inProgress ? inProgress.length : 0;
-                    const passedCount = passed ? passed.length : 0;
-                    
-                    // ファネルには進行中＋合格者を表示
-                    funnelData[stage] = inProgressCount + passedCount;
-                    funnelDetail[stage] = { inProgress: inProgressCount, passed: passedCount };
-                    
-                    console.log(`Stage ${stage}: 進行中=${inProgressCount}, 合格=${passedCount}`);
+                    funnelData[stage] = 0;
                 }
+                
+                // 各候補者の現在のステージを特定
+                allCandidates.forEach(candidate => {
+                    if (!candidate.recruitment_stages || candidate.recruitment_stages.length === 0) return;
+                    
+                    // 進行中のステージを探す
+                    const currentStage = candidate.recruitment_stages.find(s => s.status === '進行中');
+                    
+                    if (currentStage && stages.includes(currentStage.stage)) {
+                        funnelData[currentStage.stage]++;
+                    }
+                });
+                
+                console.log('Funnel data:', funnelData);
 
                 displayFunnel(funnelData);
 
