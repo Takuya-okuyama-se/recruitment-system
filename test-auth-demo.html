@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test - Demo Mode</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .test-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .info { background-color: #d1ecf1; color: #0c5460; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-content">
+        <h1>認証システムテスト</h1>
+        
+        <div id="bodyStatus" class="status info">
+            Body display: <span id="bodyDisplay"></span>
+        </div>
+        
+        <div id="authStatus" class="status info">
+            Auth status: Loading...
+        </div>
+        
+        <div id="sessionStatus" class="status info">
+            Session: Loading...
+        </div>
+        
+        <div id="modeStatus" class="status info">
+            Mode: Loading...
+        </div>
+        
+        <button onclick="testLogin()">Test Demo Login</button>
+        <button onclick="checkBodyDisplay()">Check Body Display</button>
+        <button onclick="forceShowBody()">Force Show Body</button>
+        <button onclick="window.location.href='dashboard.html?demo'">Go to Dashboard (Demo)</button>
+        
+        <h2>Event Log:</h2>
+        <div id="eventLog" style="height: 200px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px; font-family: monospace; font-size: 12px;">
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const eventLog = document.getElementById('eventLog');
+            const timestamp = new Date().toISOString().substr(11, 12);
+            const entry = document.createElement('div');
+            entry.style.color = type === 'error' ? 'red' : type === 'success' ? 'green' : 'black';
+            entry.textContent = `[${timestamp}] ${message}`;
+            eventLog.appendChild(entry);
+            eventLog.scrollTop = eventLog.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus() {
+            // Body display status
+            document.getElementById('bodyDisplay').textContent = 
+                `"${document.body.style.display}" (visibility: ${document.body.style.visibility || 'default'}, opacity: ${document.body.style.opacity || 'default'})`;
+            
+            // Auth status
+            if (window.AuthSystem) {
+                document.getElementById('authStatus').textContent = 
+                    `Auth loaded: ${window.AuthSystem.isSessionValid ? window.AuthSystem.isSessionValid() : 'N/A'}`;
+                document.getElementById('modeStatus').textContent = 
+                    `Mode: ${window.AuthSystem.getCurrentMode ? window.AuthSystem.getCurrentMode() : 'N/A'}`;
+                document.getElementById('sessionStatus').textContent = 
+                    `Session valid: ${window.AuthSystem.isSessionValid ? window.AuthSystem.isSessionValid() : 'N/A'}`;
+            } else {
+                document.getElementById('authStatus').textContent = 'Auth not loaded';
+            }
+        }
+
+        function checkBodyDisplay() {
+            log(`Body display: "${document.body.style.display}"`, 'info');
+            log(`Body visibility: "${document.body.style.visibility}"`, 'info');
+            log(`Body opacity: "${document.body.style.opacity}"`, 'info');
+            log(`Body computed display: "${window.getComputedStyle(document.body).display}"`, 'info');
+            updateStatus();
+        }
+
+        function forceShowBody() {
+            document.body.style.display = '';
+            document.body.style.visibility = 'visible';
+            document.body.style.opacity = '1';
+            log('Forced body to show', 'success');
+            updateStatus();
+        }
+
+        function testLogin() {
+            if (window.AuthSystem && window.AuthSystem.logout) {
+                window.AuthSystem.logout();
+                log('Logged out, reload page to test login', 'info');
+            } else {
+                log('Auth system not available', 'error');
+            }
+        }
+
+        // Monitor body style changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    log(`Body style changed: display="${document.body.style.display}"`, 'info');
+                    updateStatus();
+                }
+            });
+        });
+
+        observer.observe(document.body, { attributes: true, attributeFilter: ['style'] });
+
+        // Initial status
+        log('Page loaded', 'success');
+        updateStatus();
+
+        // Monitor auth events
+        document.addEventListener('authComplete', function(e) {
+            log(`Auth complete event: mode=${e.detail.mode}`, 'success');
+            updateStatus();
+        });
+
+        // Load auth.js
+        const script = document.createElement('script');
+        script.src = 'auth.js';
+        script.onload = function() {
+            log('auth.js loaded', 'success');
+            updateStatus();
+        };
+        script.onerror = function() {
+            log('auth.js failed to load', 'error');
+        };
+        document.head.appendChild(script);
+
+        // Update status periodically
+        setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html>

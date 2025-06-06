@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デモモードテスト（シンプル版）</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="demo-data.js"></script>
+</head>
+<body>
+    <h1>デモモードテスト</h1>
+    <div id="status">Loading...</div>
+    <div id="data"></div>
+    
+    <script>
+        // デバッグ情報を表示
+        function log(message) {
+            console.log(message);
+            document.getElementById('status').innerHTML += '<br>' + message;
+        }
+        
+        // ページ読み込み完了時
+        window.addEventListener('DOMContentLoaded', function() {
+            log('DOMContentLoaded');
+            
+            // URLパラメータ確認
+            const urlParams = new URLSearchParams(window.location.search);
+            log('URL has demo param: ' + urlParams.has('demo'));
+            
+            // Auth状態確認
+            setTimeout(() => {
+                log('isDemoMode: ' + (window.AuthSystem ? window.AuthSystem.isDemoMode() : 'AuthSystem not found'));
+                log('Body display: ' + document.body.style.display);
+                log('Body visibility: ' + document.body.style.visibility);
+                
+                // テストデータ取得
+                testDataAccess();
+            }, 1000);
+        });
+        
+        async function testDataAccess() {
+            try {
+                log('Testing data access...');
+                const { data, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select('*')
+                    .limit(3);
+                    
+                if (error) {
+                    log('Error: ' + error.message);
+                } else {
+                    log('Data retrieved: ' + (data ? data.length : 0) + ' records');
+                    document.getElementById('data').innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                }
+            } catch (e) {
+                log('Exception: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

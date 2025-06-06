@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>採用ダッシュボード</title>
+    <title>採用ダッシュボード - Debug</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="supabase-config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="unified-styles.css">
     <style>
         /* ダッシュボード固有のスタイル */
         .dashboard-grid {
@@ -120,26 +121,41 @@
                 width: 100%;
             }
         }
+        
+        /* Debug styles */
+        .debug-info {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 9999;
+        }
     </style>
-    <link rel="stylesheet" href="unified-styles.css">
-    <script src="auth.js"></script>
-    <script src="demo-data.js"></script>
 </head>
 <body>
-
-<nav>
-    <div>
-        <a href="dashboard.html" class="nav-link">📊 ダッシュボード</a>
-        <a href="candidate-form.html" class="nav-link">👤 候補者登録</a>
-        <a href="evaluation-form.html" class="nav-link">📝 面接評価</a>
-        <a href="aptitude-test-form.html" class="nav-link">📊 適性検査</a>
-        <a href="offer-management.html" class="nav-link">💼 内定管理</a>
-        <a href="data-management.html" class="nav-link">📈 データ管理</a>
-        <a href="organization-settings.html" class="nav-link">⚙️ 組織設定</a>
-        <a href="db-viewer.html" class="nav-link">🗄️ DBビューア</a>
+    <div class="debug-info" id="debugLog">
+        <div>Page loaded: <span id="loadTime"></span></div>
     </div>
-</nav>
 
+    <nav>
+        <div>
+            <a href="dashboard.html" class="nav-link">📊 ダッシュボード</a>
+            <a href="candidate-form.html" class="nav-link">👤 候補者登録</a>
+            <a href="evaluation-form.html" class="nav-link">📝 面接評価</a>
+            <a href="aptitude-test-form.html" class="nav-link">📊 適性検査</a>
+            <a href="offer-management.html" class="nav-link">💼 内定管理</a>
+            <a href="data-management.html" class="nav-link">📈 データ管理</a>
+            <a href="organization-settings.html" class="nav-link">⚙️ 組織設定</a>
+            <a href="db-viewer.html" class="nav-link">🗄️ DBビューア</a>
+        </div>
+    </nav>
 
     <div class="container">
         <div class="header">
@@ -192,7 +208,70 @@
     </div>
 
     <script>
-        // Supabaseクライアントは supabase-config.js で定義済み
+        // Debug logging function
+        function debugLog(message, data = null) {
+            const debugEl = document.getElementById('debugLog');
+            const logEntry = document.createElement('div');
+            const timestamp = new Date().toISOString().substr(11, 12);
+            logEntry.innerHTML = `[${timestamp}] ${message}${data ? ': ' + JSON.stringify(data) : ''}`;
+            debugEl.appendChild(logEntry);
+            debugEl.scrollTop = debugEl.scrollHeight;
+            console.log(message, data);
+        }
+
+        // Set load time
+        document.getElementById('loadTime').textContent = new Date().toISOString();
+
+        // Debug: Check document.body.style
+        debugLog('Initial body style display', document.body.style.display);
+
+        // Debug: Check if scripts are loading
+        debugLog('Checking script loading...');
+        
+        // Wait for auth.js to load
+        if (typeof window.AuthSystem !== 'undefined') {
+            debugLog('AuthSystem loaded', {
+                isDemoMode: window.AuthSystem.isDemoMode ? window.AuthSystem.isDemoMode() : 'function not available',
+                isSessionValid: window.AuthSystem.isSessionValid ? window.AuthSystem.isSessionValid() : 'function not available'
+            });
+        } else {
+            debugLog('AuthSystem not loaded yet');
+        }
+
+        // Load auth.js
+        const authScript = document.createElement('script');
+        authScript.src = 'auth.js';
+        authScript.onload = function() {
+            debugLog('auth.js loaded successfully');
+            
+            // Check body display after auth loads
+            setTimeout(() => {
+                debugLog('Body display after auth.js', document.body.style.display);
+                
+                // Force display body if hidden
+                if (document.body.style.display === 'none') {
+                    debugLog('Body was hidden, forcing display');
+                    document.body.style.display = '';
+                }
+            }, 500);
+        };
+        authScript.onerror = function(e) {
+            debugLog('auth.js failed to load', e);
+        };
+        document.head.appendChild(authScript);
+
+        // Load demo-data.js
+        const demoScript = document.createElement('script');
+        demoScript.src = 'demo-data.js';
+        demoScript.onload = function() {
+            debugLog('demo-data.js loaded successfully');
+        };
+        demoScript.onerror = function(e) {
+            debugLog('demo-data.js failed to load', e);
+        };
+        document.head.appendChild(demoScript);
+
+        // Dashboard functionality
         let departmentChart = null;
         let sourceChart = null;
 
@@ -209,21 +288,24 @@
 
         // データの取得と表示
         async function loadDashboard() {
+            debugLog('loadDashboard called');
+            
             try {
-                console.log('Loading dashboard data...');
-                
-                // Supabaseクライアントのチェック
-                if (!window.SUPABASE_CLIENT) {
-                    console.error('SUPABASE_CLIENT not available');
-                    showAlert('初期化エラー: ページを再読み込みしてください');
+                // Check if SUPABASE_CLIENT exists
+                if (typeof window.SUPABASE_CLIENT === 'undefined') {
+                    debugLog('SUPABASE_CLIENT not defined, waiting...');
+                    setTimeout(loadDashboard, 1000);
                     return;
                 }
                 
+                debugLog('SUPABASE_CLIENT available');
+
                 // 採用ファネルデータ
                 const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
                 const funnelData = {};
 
                 // 全候補者の現在のステージを取得
+                debugLog('Fetching candidates...');
                 const { data: allCandidates, error: funnelError } = await window.SUPABASE_CLIENT
                     .from('candidates')
                     .select(`
@@ -231,7 +313,12 @@
                         recruitment_stages(stage, status, created_at)
                     `);
                 
-                if (funnelError) throw funnelError;
+                if (funnelError) {
+                    debugLog('Funnel error', funnelError);
+                    throw funnelError;
+                }
+                
+                debugLog('Candidates fetched', { count: allCandidates?.length });
                 
                 // 各ステージの人数をカウント
                 for (const stage of stages) {
@@ -250,37 +337,55 @@
                     }
                 });
                 
-                console.log('Funnel data:', funnelData);
-
+                debugLog('Funnel data', funnelData);
                 displayFunnel(funnelData);
 
                 // 部署別進捗
+                debugLog('Fetching positions...');
                 const { data: positions, error: posError } = await window.SUPABASE_CLIENT
                     .from('positions')
                     .select('*, departments(name), candidates(id)');
                 
-                if (posError) throw posError;
+                if (posError) {
+                    debugLog('Positions error', posError);
+                    throw posError;
+                }
+                
+                debugLog('Positions fetched', { count: positions?.length });
                 displayDepartmentChart(positions);
 
                 // 応募経路分析
+                debugLog('Fetching candidates for source analysis...');
                 const { data: candidates, error: candError } = await window.SUPABASE_CLIENT
                     .from('candidates')
                     .select('source');
                 
-                if (candError) throw candError;
+                if (candError) {
+                    debugLog('Candidates error', candError);
+                    throw candError;
+                }
+                
+                debugLog('Candidates for source fetched', { count: candidates?.length });
                 displaySourceChart(candidates);
 
                 // 最近の活動
+                debugLog('Fetching recent candidates...');
                 const { data: recentCandidates, error: recentError } = await window.SUPABASE_CLIENT
                     .from('candidates')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(5);
                 
-                if (recentError) throw recentError;
+                if (recentError) {
+                    debugLog('Recent candidates error', recentError);
+                    throw recentError;
+                }
+                
+                debugLog('Recent candidates fetched', { count: recentCandidates?.length });
                 displayRecentActivities(recentCandidates);
 
             } catch (error) {
+                debugLog('Error in loadDashboard', error);
                 console.error('Error:', error);
                 showAlert('データの読み込みに失敗しました: ' + error.message);
             }
@@ -288,6 +393,7 @@
 
         // 採用ファネルの表示
         function displayFunnel(data) {
+            debugLog('displayFunnel called', data);
             const funnelDiv = document.getElementById('funnel');
             funnelDiv.innerHTML = '';
 
@@ -307,6 +413,7 @@
 
         // 部署別進捗チャートの表示
         function displayDepartmentChart(positions) {
+            debugLog('displayDepartmentChart called', { positionsCount: positions?.length });
             const departments = {};
             positions.forEach(pos => {
                 const deptName = pos.departments?.name || '未設定';
@@ -351,6 +458,7 @@
 
         // 応募経路チャートの表示
         function displaySourceChart(candidates) {
+            debugLog('displaySourceChart called', { candidatesCount: candidates?.length });
             const sources = {};
             candidates.forEach(candidate => {
                 const source = candidate.source || '不明';
@@ -383,6 +491,7 @@
 
         // 最近の活動表示
         function displayRecentActivities(candidates) {
+            debugLog('displayRecentActivities called', { candidatesCount: candidates?.length });
             const activitiesDiv = document.getElementById('recentActivities');
             
             if (candidates.length === 0) {
@@ -405,37 +514,16 @@
             showAlert('データを更新しました', 'success');
         }
 
-        // 認証完了を待ってからデータを取得
-        document.addEventListener('authComplete', function(e) {
-            console.log('Auth completed, loading dashboard...');
-            loadDashboard();
-        });
-        
-        // ページ読み込み時にもチェック（既にログイン済みの場合）
+        // ページ読み込み時にデータを取得
         window.addEventListener('DOMContentLoaded', function() {
-            // 少し待ってから、既にログイン済みかチェック
-            setTimeout(function() {
-                if (window.AuthSystem && window.AuthSystem.isSessionValid()) {
-                    console.log('Already logged in, loading dashboard...');
-                    loadDashboard();
-                }
-            }, 100);
+            debugLog('DOMContentLoaded fired');
+            
+            // Wait a bit for all scripts to load
+            setTimeout(() => {
+                debugLog('Starting dashboard load after delay');
+                loadDashboard();
+            }, 1000);
         });
-    </script>
-    <script src="nav-hamburger-final.js"></script>
-    
-    <!-- Failsafe to ensure body is visible -->
-    <script>
-        // 最終的なフェイルセーフ: 3秒後に強制的にbodyを表示
-        setTimeout(function() {
-            if (document.body.style.display === 'none' || 
-                window.getComputedStyle(document.body).display === 'none') {
-                console.warn('Body was hidden, forcing display...');
-                document.body.style.display = '';
-                document.body.style.visibility = 'visible';
-                document.body.style.opacity = '1';
-            }
-        }, 3000);
     </script>
 </body>
 </html>

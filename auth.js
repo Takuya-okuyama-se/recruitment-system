@@ -115,8 +115,14 @@
         
         const currentMode = getCurrentMode();
         
+        // 元のdisplayスタイルを保存
+        const originalBodyDisplay = document.body.style.display || '';
+        
         // ページ全体を隠す
         document.body.style.display = 'none';
+        
+        // グローバルに保存
+        window._originalBodyDisplay = originalBodyDisplay;
         
         // ログイン画面HTML
         const loginHTML = `
@@ -216,7 +222,16 @@
                 // ログイン成功
                 saveSession(currentMode);
                 document.getElementById('loginScreen').remove();
-                document.body.style.display = '';
+                
+                // 必ず body を表示状態に戻す
+                document.body.style.display = window._originalBodyDisplay || '';
+                document.body.style.visibility = 'visible';
+                document.body.style.opacity = '1';
+                
+                console.log('🔐 Body display restored after login', {
+                    originalDisplay: window._originalBodyDisplay,
+                    currentDisplay: document.body.style.display
+                });
                 
                 // 成功メッセージ
                 showNotification(`✅ ${currentMode === 'demo' ? 'デモ' : '管理者'}モードでログインしました`, 'success');
@@ -225,6 +240,12 @@
                 if (currentMode === 'demo') {
                     enableDemoMode();
                 }
+                
+                // ページ初期化イベントを発火
+                const event = new CustomEvent('authComplete', {
+                    detail: { mode: currentMode }
+                });
+                document.dispatchEvent(event);
                 
             } else {
                 // ログイン失敗
@@ -404,6 +425,20 @@
         if (isDemoMode()) {
             enableDemoMode();
         }
+        
+        // 既にログイン済みの場合、bodyが表示されていることを確認
+        if (document.body.style.display === 'none') {
+            console.log('🔐 Body was hidden, restoring display for logged-in user');
+            document.body.style.display = '';
+            document.body.style.visibility = 'visible';
+            document.body.style.opacity = '1';
+        }
+        
+        // 認証完了イベントを発火（既にログイン済みの場合）
+        const event = new CustomEvent('authComplete', {
+            detail: { mode: isDemoMode() ? 'demo' : 'admin', alreadyLoggedIn: true }
+        });
+        document.dispatchEvent(event);
         
         console.log(`🔐 Auth system ready (${isDemoMode() ? 'demo' : 'admin'} mode)`);
     }
