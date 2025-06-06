@@ -248,10 +248,12 @@
     // デモデータを返す関数
     function getDemoData(tableName, filters = {}) {
         if (!isDemoMode()) {
+            console.log('🎯 getDemoData: Not in demo mode');
             return null;
         }
         
         let data = DEMO_DATA[tableName] || [];
+        console.log(`🎯 getDemoData: ${tableName}`, data.length, 'records');
         
         // フィルター適用
         if (Object.keys(filters).length > 0) {
@@ -286,8 +288,16 @@
         
         console.log('🎯 Setting up demo Supabase client...');
         
+        // 既にオーバーライド済みの場合はスキップ
+        if (window.SUPABASE_CLIENT._demoOverridden) {
+            console.log('🎯 Demo Supabase client already overridden');
+            return;
+        }
+        
         // オリジナルのfromメソッドを保存
         const originalFrom = window.SUPABASE_CLIENT.from.bind(window.SUPABASE_CLIENT);
+        window.SUPABASE_CLIENT._originalFrom = originalFrom;
+        window.SUPABASE_CLIENT._demoOverridden = true;
         
         // fromメソッドをオーバーライド
         window.SUPABASE_CLIENT.from = function(tableName) {
@@ -379,6 +389,7 @@
                             data = data[0] || null;
                         }
                         
+                        console.log(`🎯 Demo query result: ${this.tableName}`, data);
                         resolve({ data, error: null });
                     }).then(onResolve, onReject);
                 }
