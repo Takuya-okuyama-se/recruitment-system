@@ -107,6 +107,12 @@
     
     // ログイン画面を表示
     function showLoginScreen() {
+        // 既にログイン画面が表示されている場合はスキップ
+        if (document.getElementById('loginScreen')) {
+            console.log('🔐 Login screen already displayed');
+            return;
+        }
+        
         const currentMode = getCurrentMode();
         
         // ページ全体を隠す
@@ -376,6 +382,13 @@
     
     // 初期化
     function init() {
+        // 既に初期化済みの場合はスキップ
+        if (window.AuthSystemInitialized) {
+            console.log('🔐 Auth system already initialized');
+            return;
+        }
+        window.AuthSystemInitialized = true;
+        
         console.log('🔐 Auth system initializing...');
         
         // セッション確認
