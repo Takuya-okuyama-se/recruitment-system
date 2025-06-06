@@ -347,7 +347,8 @@
                     .insert([{
                         candidate_id: newCandidate.id,
                         stage: '書類選考',
-                        status: '進行中'
+                        status: '進行中',
+                        scheduled_date: new Date().toISOString().split('T')[0]
                     }]);
                 
                 if (stageError) throw stageError;
@@ -435,20 +436,32 @@
             
             try {
                 // 現在のステージを取得
-                const { data: stages, error: stageError } = await window.SUPABASE_CLIENT
+                const { data: stagesArray, error: stageError } = await window.SUPABASE_CLIENT
                     .from('recruitment_stages')
                     .select('*')
                     .eq('candidate_id', candidateId)
-                    .eq('status', '進行中')
-                    .single();
+                    .eq('status', '進行中');
                 
-                if (stageError) throw stageError;
+                if (stageError) {
+                    console.error('Stage fetch error:', stageError);
+                    throw stageError;
+                }
+                
+                if (!stagesArray || stagesArray.length === 0) {
+                    throw new Error('進行中のステージが見つかりません');
+                }
+                
+                const stages = stagesArray[0];
+                console.log('Current stage:', stages);
 
                 if (action === 'fail') {
                     // 不合格にする
                     const { error } = await window.SUPABASE_CLIENT
                         .from('recruitment_stages')
-                        .update({ status: '不合格', completed_date: new Date().toISOString() })
+                        .update({ 
+                            status: '不合格', 
+                            completed_date: new Date().toISOString().split('T')[0] 
+                        })
                         .eq('id', stages.id);
                     
                     if (error) throw error;
@@ -461,7 +474,10 @@
                         // 現在のステージを完了
                         const { error: updateError } = await window.SUPABASE_CLIENT
                             .from('recruitment_stages')
-                            .update({ status: '合格', completed_date: new Date().toISOString() })
+                            .update({ 
+                                status: '合格', 
+                                completed_date: new Date().toISOString().split('T')[0] 
+                            })
                             .eq('id', stages.id);
                         
                         if (updateError) throw updateError;
@@ -472,10 +488,18 @@
                             .insert([{
                                 candidate_id: candidateId,
                                 stage: stageOrder[currentIndex + 1],
-                                status: '進行中'
+                                status: '進行中',
+                                scheduled_date: new Date().toISOString().split('T')[0]
                             }]);
                         
-                        if (insertError) throw insertError;
+                        if (insertError) {
+                            console.error('Insert error:', insertError);
+                            throw insertError;
+                        }
+                        
+                        console.log('Successfully advanced to:', stageOrder[currentIndex + 1]);
+                    } else {
+                        showAlert('info', 'これが最終ステージです');
                     }
                 }
 

@@ -225,12 +225,13 @@
                 for (const stage of stages) {
                     const { data, error } = await window.SUPABASE_CLIENT
                         .from('recruitment_stages')
-                        .select('id')
+                        .select('id, candidate_id')
                         .eq('stage', stage)
                         .eq('status', '進行中');
                     
                     if (error) throw error;
-                    funnelData[stage] = data.length;
+                    funnelData[stage] = data ? data.length : 0;
+                    console.log(`Stage ${stage}: ${data ? data.length : 0} candidates`);
                 }
 
                 displayFunnel(funnelData);
