@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const navDiv = nav.querySelector('div');
         if (!navDiv) return;
         
+        // インラインスタイルを削除
+        navDiv.removeAttribute('style');
+        navDiv.style.maxWidth = '1400px';
+        navDiv.style.margin = '0 auto';
+        
         // モバイルヘッダーを作成
         const mobileHeader = document.createElement('div');
         mobileHeader.className = 'mobile-header';
@@ -28,16 +33,25 @@ document.addEventListener('DOMContentLoaded', function() {
             <span></span>
         `;
         
-        // ナビゲーションリンクをラップ
-        const existingLinks = navDiv.innerHTML;
+        // ナビゲーションリンクを取得
+        const links = navDiv.querySelectorAll('.nav-link');
+        
+        // 既存の内容をクリア
         navDiv.innerHTML = '';
+        
+        // モバイルヘッダーとハンバーガーを追加
         navDiv.appendChild(mobileHeader);
         navDiv.appendChild(hamburger);
         
         // nav-linksクラスのdivを作成
         const navLinks = document.createElement('div');
         navLinks.className = 'nav-links';
-        navLinks.innerHTML = existingLinks;
+        
+        // リンクをnav-linksに追加
+        links.forEach(link => {
+            navLinks.appendChild(link.cloneNode(true));
+        });
+        
         navDiv.appendChild(navLinks);
         
         // ハンバーガーメニューのクリックイベント

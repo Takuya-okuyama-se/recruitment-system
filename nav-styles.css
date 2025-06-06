@@ -13,6 +13,9 @@ nav {
 nav > div {
     background: transparent !important;
     position: relative;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px;
 }
 
 /* ハンバーガーメニューボタン */
