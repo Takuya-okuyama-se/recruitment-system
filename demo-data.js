@@ -229,7 +229,20 @@
     
     // デモモードかチェック
     function isDemoMode() {
-        return window.AuthSystem && window.AuthSystem.isDemoMode();
+        if (!window.AuthSystem) {
+            console.log('🎯 AuthSystem not found, checking URL for demo mode');
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.has('demo');
+        }
+        
+        if (typeof window.AuthSystem.isDemoMode !== 'function') {
+            console.log('🎯 AuthSystem.isDemoMode is not a function');
+            return false;
+        }
+        
+        const result = window.AuthSystem.isDemoMode();
+        console.log('🎯 Demo mode from AuthSystem:', result);
+        return result;
     }
     
     // デモデータを返す関数
@@ -259,7 +272,15 @@
     
     // Supabaseクライアントをデモモード用にオーバーライド
     function setupDemoSupabase() {
-        if (!isDemoMode() || !window.SUPABASE_CLIENT) {
+        console.log('🎯 setupDemoSupabase called');
+        
+        if (!isDemoMode()) {
+            console.log('🎯 Not in demo mode, skipping setup');
+            return;
+        }
+        
+        if (!window.SUPABASE_CLIENT) {
+            console.log('🎯 SUPABASE_CLIENT not found, skipping setup');
             return;
         }
         
@@ -396,5 +417,13 @@
     };
     
     // 認証システムの後に初期化
-    setTimeout(init, 100);
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            // AuthSystemが初期化されるのを待つ
+            setTimeout(init, 500);
+        });
+    } else {
+        // 既にDOMが読み込まれている場合
+        setTimeout(init, 500);
+    }
 })();
