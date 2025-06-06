@@ -221,20 +221,37 @@
                 // 採用ファネルデータ
                 const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
                 const funnelData = {};
+                const funnelDetail = {};
 
                 for (const stage of stages) {
-                    const { data, error } = await window.SUPABASE_CLIENT
+                    // 進行中の候補者
+                    const { data: inProgress, error: err1 } = await window.SUPABASE_CLIENT
                         .from('recruitment_stages')
                         .select('id, candidate_id')
                         .eq('stage', stage)
                         .eq('status', '進行中');
                     
-                    if (error) throw error;
-                    funnelData[stage] = data ? data.length : 0;
-                    console.log(`Stage ${stage}: ${data ? data.length : 0} candidates`);
+                    // 合格した候補者（次のステージに進んだ）
+                    const { data: passed, error: err2 } = await window.SUPABASE_CLIENT
+                        .from('recruitment_stages')
+                        .select('id, candidate_id')
+                        .eq('stage', stage)
+                        .eq('status', '合格');
+                    
+                    if (err1) throw err1;
+                    if (err2) throw err2;
+                    
+                    const inProgressCount = inProgress ? inProgress.length : 0;
+                    const passedCount = passed ? passed.length : 0;
+                    
+                    // ファネルには進行中＋合格者を表示
+                    funnelData[stage] = inProgressCount + passedCount;
+                    funnelDetail[stage] = { inProgress: inProgressCount, passed: passedCount };
+                    
+                    console.log(`Stage ${stage}: 進行中=${inProgressCount}, 合格=${passedCount}`);
                 }
 
-                displayFunnel(funnelData);
+                displayFunnel(funnelData, funnelDetail);
 
                 // 部署別進捗
                 const { data: positions, error: posError } = await window.SUPABASE_CLIENT
@@ -269,19 +286,23 @@
         }
 
         // 採用ファネルの表示
-        function displayFunnel(data) {
+        function displayFunnel(data, detail) {
             const funnelDiv = document.getElementById('funnel');
             funnelDiv.innerHTML = '';
 
             const stages = ['書類選考', '一次面接', '二次面接', '適性検査', '最終面接', '内定'];
             stages.forEach(stage => {
                 const count = data[stage] || 0;
+                const stageDetail = detail && detail[stage] ? detail[stage] : { inProgress: 0, passed: 0 };
                 const stageDiv = document.createElement('div');
                 stageDiv.className = 'funnel-stage';
                 stageDiv.onclick = () => window.location.href = `stage-detail.html?stage=${encodeURIComponent(stage)}`;
                 stageDiv.innerHTML = `
                     <span>${stage}</span>
                     <span class="stage-count">${count}名</span>
+                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
+                        進行中: ${stageDetail.inProgress} / 合格: ${stageDetail.passed}
+                    </div>
                 `;
                 funnelDiv.appendChild(stageDiv);
             });
