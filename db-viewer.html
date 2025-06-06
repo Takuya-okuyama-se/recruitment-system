@@ -287,78 +287,60 @@
     <script>
         // Supabaseクライアントはsupabase-config.jsで定義済み
         
-        // エラーハンドリング付きのfetch関数
-        async function fetchWithRetry(url, retries = 2) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url);
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response;
-                } catch (error) {
-                    console.error(`Attempt ${i + 1} failed:`, error);
-                    if (i === retries - 1) throw error;
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                }
-            }
-        }
-
+        // Supabaseクライアントはsupabase-config.jsで定義済み
+        
         // 統計情報の読み込み
         async function loadStats() {
             try {
-                // APIサーバーの状態確認
-                console.log('APIサーバーに接続中...');
+                console.log('Supabaseから統計情報を読み込み中...');
                 
                 // 候補者数
                 try {
-                    const candidatesRes = await fetchWithRetry(`/api/candidates`);
-                    const candidatesData = await candidatesRes.json();
-                    document.getElementById('totalCandidates').textContent = candidatesData.total || '0';
+                    const { data: candidates, error } = await window.SUPABASE_CLIENT
+                        .from('candidates')
+                        .select('id', { count: 'exact' });
                     
-                    // 評価数（ダミー）
-                    document.getElementById('totalEvaluations').textContent = 
-                        Math.floor((candidatesData.total || 0) * 1.5) || '0';
+                    if (error) throw error;
+                    const candidateCount = candidates ? candidates.length : 0;
+                    document.getElementById('totalCandidates').textContent = candidateCount;
+                    
+                    // 評価数
+                    const { data: evaluations, error: evalError } = await window.SUPABASE_CLIENT
+                        .from('evaluations')
+                        .select('id', { count: 'exact' });
+                    
+                    const evalCount = evaluations ? evaluations.length : 0;
+                    document.getElementById('totalEvaluations').textContent = evalCount;
                 } catch (error) {
                     console.error('候補者データの取得に失敗:', error);
-                    document.getElementById('totalCandidates').textContent = 'エラー';
+                    document.getElementById('totalCandidates').textContent = '0';
+                    document.getElementById('totalEvaluations').textContent = '0';
                 }
 
-                // 部門数
+                // 部門数と職種数
                 try {
-                    const deptRes = await fetchWithRetry(`/api/recruitment/by-department`);
-                    const deptData = await deptRes.json();
-                    document.getElementById('totalDepartments').textContent = deptData.length || '0';
-
-                    // 職種数（部門データから計算）
-                    const totalPositions = deptData.reduce((sum, dept) => 
-                        sum + parseInt(dept.open_positions || 0), 0
-                    );
-                    document.getElementById('totalPositions').textContent = totalPositions;
+                    const { data: departments, error: deptError } = await window.SUPABASE_CLIENT
+                        .from('departments')
+                        .select('*');
+                    
+                    if (deptError) throw deptError;
+                    document.getElementById('totalDepartments').textContent = departments ? departments.length : 0;
+                    
+                    const { data: positions, error: posError } = await window.SUPABASE_CLIENT
+                        .from('positions')
+                        .select('*');
+                    
+                    if (posError) throw posError;
+                    document.getElementById('totalPositions').textContent = positions ? positions.length : 0;
                 } catch (error) {
                     console.error('部門データの取得に失敗:', error);
-                    document.getElementById('totalDepartments').textContent = 'エラー';
-                    document.getElementById('totalPositions').textContent = 'エラー';
+                    document.getElementById('totalDepartments').textContent = '0';
+                    document.getElementById('totalPositions').textContent = '0';
                 }
 
             } catch (error) {
                 console.error('統計情報の読み込みエラー:', error);
-                // エラーメッセージを表示
-                showConnectionError();
             }
-        }
-        
-        // 接続エラーの表示
-        function showConnectionError() {
-            const container = document.querySelector('.container');
-            const errorDiv = document.createElement('div');
-            errorDiv.style.cssText = 'background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; text-align: center;';
-            errorDiv.innerHTML = `
-                <strong>⚠️ APIサーバーに接続できません</strong><br>
-                以下のコマンドでサーバーを再起動してください：<br>
-                <code style="background: #fff; padding: 5px; border-radius: 3px;">sudo docker-compose restart app</code>
-            `;
-            container.insertBefore(errorDiv, container.firstChild);
         }
 
         // テーブルデータの読み込み
@@ -380,42 +362,62 @@
 
                 switch (tableName) {
                     case 'candidates':
-                        const candidatesRes = await window.SUPABASE_CLIENT.from("candidates").select("*");
-                        const candidatesData = await candidatesRes.json();
-                        data = candidatesData.candidates || [];
+                        const { data: candidates, error: candError } = await window.SUPABASE_CLIENT
+                            .from('candidates')
+                            .select('*, positions(title)');
+                        if (candError) throw candError;
+                        data = candidates || [];
                         title = '候補者一覧';
                         displayCandidates(data);
                         break;
 
                     case 'departments':
-                        const deptRes = await fetch(`/api/recruitment/by-department`);
-                        data = await deptRes.json();
+                        const { data: departments, error: deptError } = await window.SUPABASE_CLIENT
+                            .from('departments')
+                            .select('*');
+                        if (deptError) throw deptError;
+                        data = departments || [];
                         title = '部門一覧';
                         displayDepartments(data);
                         break;
 
                     case 'positions':
+                        const { data: positions, error: posError } = await window.SUPABASE_CLIENT
+                            .from('positions')
+                            .select('*, departments(name)');
+                        if (posError) throw posError;
+                        data = positions || [];
                         title = '募集職種一覧';
-                        displayPositions();
+                        displayPositions(data);
                         break;
 
                     case 'processes':
-                        const processRes = await window.SUPABASE_CLIENT.from("candidates").select("*");
-                        const processData = await processRes.json();
-                        data = processData.candidates || [];
+                        const { data: stages, error: stageError } = await window.SUPABASE_CLIENT
+                            .from('recruitment_stages')
+                            .select('*, candidates(name, email)')
+                            .order('created_at', { ascending: false });
+                        if (stageError) throw stageError;
+                        data = stages || [];
                         title = '採用プロセス状況';
                         displayProcesses(data);
                         break;
 
                     case 'evaluations':
+                        const { data: evaluations, error: evalError } = await window.SUPABASE_CLIENT
+                            .from('evaluations')
+                            .select('*, candidates(name), evaluators(name)')
+                            .order('created_at', { ascending: false });
+                        if (evalError) throw evalError;
+                        data = evaluations || [];
                         title = '評価一覧';
-                        displayEvaluations();
+                        displayEvaluations(data);
                         break;
                 }
 
                 document.getElementById('tableTitle').textContent = title;
 
             } catch (error) {
+                console.error('Table load error:', error);
                 tableContent.innerHTML = `<p class="error">エラー: ${error.message}</p>`;
             }
         }
@@ -443,11 +445,11 @@
                         ${candidates.map(c => `
                             <tr>
                                 <td>${c.id}</td>
-                                <td><strong>${c.last_name} ${c.first_name}</strong></td>
-                                <td>${c.email}</td>
-                                <td>${c.position_title || '未設定'}</td>
+                                <td><strong>${c.name || ''}</strong></td>
+                                <td>${c.email || ''}</td>
+                                <td>${c.positions?.title || '未設定'}</td>
                                 <td><span class="stage-badge stage-${c.current_stage || '書類選考'}">${c.current_stage || '書類選考'}</span></td>
-                                <td>${new Date(c.created_at).toLocaleDateString('ja-JP')}</td>
+                                <td>${c.created_at ? new Date(c.created_at).toLocaleDateString('ja-JP') : ''}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -459,33 +461,30 @@
 
         // 部門テーブル表示
         function displayDepartments(departments) {
+            if (departments.length === 0) {
+                document.getElementById('tableContent').innerHTML = '<p>データがありません</p>';
+                return;
+            }
+
             const html = `
                 <table>
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>部門名</th>
-                            <th>募集職種数</th>
-                            <th>目標採用数</th>
-                            <th>応募者数</th>
-                            <th>採用決定数</th>
-                            <th>達成率</th>
+                            <th>説明</th>
+                            <th>作成日</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${departments.map(d => {
-                            const rate = d.target_hires > 0 ? 
-                                Math.round((d.hired / d.target_hires) * 100) : 0;
-                            return `
-                                <tr>
-                                    <td><strong>${d.department}</strong></td>
-                                    <td>${d.open_positions}</td>
-                                    <td>${d.target_hires || 0}</td>
-                                    <td>${d.total_candidates}</td>
-                                    <td>${d.hired}</td>
-                                    <td>${rate}%</td>
-                                </tr>
-                            `;
-                        }).join('')}
+                        ${departments.map(d => `
+                            <tr>
+                                <td>${d.id}</td>
+                                <td><strong>${d.name}</strong></td>
+                                <td>${d.description || '-'}</td>
+                                <td>${d.created_at ? new Date(d.created_at).toLocaleDateString('ja-JP') : '-'}</td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             `;
@@ -494,14 +493,11 @@
         }
 
         // 職種テーブル表示
-        function displayPositions() {
-            const positions = [
-                { id: 1, title: '研究開発エンジニア', department: '研究開発本部', target: 3 },
-                { id: 2, title: '品質管理責任者', department: '品質保証部', target: 1 },
-                { id: 3, title: '生産技術マネージャー', department: '生産技術部', target: 2 },
-                { id: 4, title: 'マーケティング担当', department: 'マーケティング部', target: 2 },
-                { id: 5, title: '人事総務スタッフ', department: '人事総務部', target: 1 }
-            ];
+        function displayPositions(positions) {
+            if (positions.length === 0) {
+                document.getElementById('tableContent').innerHTML = '<p>データがありません</p>';
+                return;
+            }
 
             const html = `
                 <table>
@@ -511,6 +507,7 @@
                             <th>職種名</th>
                             <th>所属部門</th>
                             <th>目標採用数</th>
+                            <th>応募要件</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -518,8 +515,9 @@
                             <tr>
                                 <td>${p.id}</td>
                                 <td><strong>${p.title}</strong></td>
-                                <td>${p.department}</td>
-                                <td>${p.target}</td>
+                                <td>${p.departments?.name || '未設定'}</td>
+                                <td>${p.target_count || 0}</td>
+                                <td>${p.requirements || '-'}</td>
                             </tr>
                         `).join('')}
                     </tbody>
@@ -530,33 +528,33 @@
         }
 
         // プロセステーブル表示
-        function displayProcesses(candidates) {
+        function displayProcesses(stages) {
+            if (stages.length === 0) {
+                document.getElementById('tableContent').innerHTML = '<p>データがありません</p>';
+                return;
+            }
+
             const html = `
                 <table>
                     <thead>
                         <tr>
                             <th>候補者名</th>
-                            <th>現在のステージ</th>
+                            <th>ステージ</th>
                             <th>ステータス</th>
-                            <th>部門</th>
-                            <th>経過日数</th>
+                            <th>予定日</th>
+                            <th>完了日</th>
                         </tr>
                     </thead>
                     <tbody>
-                        ${candidates.map(c => {
-                            const days = Math.floor(Math.random() * 10) + 1;
-                            const status = c.stage_status === 'in_progress' ? '進行中' :
-                                         c.stage_status === 'passed' ? '合格' : '不合格';
-                            return `
-                                <tr>
-                                    <td><strong>${c.last_name} ${c.first_name}</strong></td>
-                                    <td><span class="stage-badge stage-${c.current_stage || '書類選考'}">${c.current_stage || '書類選考'}</span></td>
-                                    <td>${status}</td>
-                                    <td>${c.department_name || '未設定'}</td>
-                                    <td>${days}日</td>
-                                </tr>
-                            `;
-                        }).join('')}
+                        ${stages.map(s => `
+                            <tr>
+                                <td><strong>${s.candidates?.name || '未設定'}</strong></td>
+                                <td><span class="stage-badge stage-${s.stage}">${s.stage}</span></td>
+                                <td>${s.status}</td>
+                                <td>${s.scheduled_date ? new Date(s.scheduled_date).toLocaleDateString('ja-JP') : '-'}</td>
+                                <td>${s.completed_date ? new Date(s.completed_date).toLocaleDateString('ja-JP') : '-'}</td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
             `;
@@ -565,12 +563,11 @@
         }
 
         // 評価テーブル表示
-        function displayEvaluations() {
-            const evaluations = [
-                { candidate: '山田 太郎', stage: '一次面接', interviewer: '佐藤 部長', date: '2024-01-15', score: 4.2 },
-                { candidate: '鈴木 花子', stage: '最終面接', interviewer: '田中 役員', date: '2024-01-16', score: 4.5 },
-                { candidate: '高橋 一郎', stage: '適性検査', interviewer: 'システム', date: '2024-01-17', score: 3.8 }
-            ];
+        function displayEvaluations(evaluations) {
+            if (evaluations.length === 0) {
+                document.getElementById('tableContent').innerHTML = '<p>データがありません</p>';
+                return;
+            }
 
             const html = `
                 <table>
@@ -586,11 +583,11 @@
                     <tbody>
                         ${evaluations.map(e => `
                             <tr>
-                                <td><strong>${e.candidate}</strong></td>
+                                <td><strong>${e.candidates?.name || '未設定'}</strong></td>
                                 <td>${e.stage}</td>
-                                <td>${e.interviewer}</td>
-                                <td>${e.date}</td>
-                                <td>${e.score}/5.0</td>
+                                <td>${e.evaluators?.name || '未設定'}</td>
+                                <td>${e.created_at ? new Date(e.created_at).toLocaleDateString('ja-JP') : '-'}</td>
+                                <td>${e.overall_score ? e.overall_score.toFixed(1) : '-'}/5.0</td>
                             </tr>
                         `).join('')}
                     </tbody>
