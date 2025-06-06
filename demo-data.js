@@ -272,7 +272,14 @@
         window.SUPABASE_CLIENT.from = function(tableName) {
             console.log(`🎯 Demo query: ${tableName}`);
             
-            return {
+            const queryBuilder = {
+                tableName: tableName,
+                columns: '*',
+                filters: {},
+                orderBy: null,
+                limitCount: null,
+                isSingle: false,
+                
                 select: function(columns = '*') {
                     this.columns = columns;
                     return this;
@@ -321,7 +328,7 @@
                 
                 then: function(onResolve, onReject) {
                     return new Promise((resolve) => {
-                        let data = getDemoData(tableName, this.filters);
+                        let data = getDemoData(this.tableName, this.filters);
                         
                         if (!data) {
                             resolve({ data: [], error: null });
@@ -355,6 +362,8 @@
                     }).then(onResolve, onReject);
                 }
             };
+            
+            return queryBuilder;
         };
         
         console.log('🎯 Demo Supabase client ready');
