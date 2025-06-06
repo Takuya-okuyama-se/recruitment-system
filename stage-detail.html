@@ -490,27 +490,68 @@
                 
                 console.log('Candidates loaded:', candidates);
                 
-                // 現在のステージの候補者をフィルタ
-                allCandidates = (candidates || []).filter(c => 
-                    c.recruitment_stages?.some(s => 
-                        s.stage === currentStage && s.status === '進行中'
-                    )
-                );
+                // ステージ別に候補者を分類
+                const stageCandidates = {
+                    inProgress: [],
+                    passed: [],
+                    failed: []
+                };
                 
-                console.log('Filtered candidates:', allCandidates);
+                candidates.forEach(c => {
+                    const stageInfo = c.recruitment_stages?.find(s => s.stage === currentStage);
+                    if (stageInfo) {
+                        if (stageInfo.status === '進行中') {
+                            stageCandidates.inProgress.push(c);
+                        } else if (stageInfo.status === '合格') {
+                            stageCandidates.passed.push(c);
+                        } else if (stageInfo.status === '不合格') {
+                            stageCandidates.failed.push(c);
+                        }
+                    }
+                });
+                
+                allCandidates = stageCandidates.inProgress;
+                console.log('Stage candidates:', stageCandidates);
                 
                 // ステージ統計を計算
+                const totalInStage = stageCandidates.inProgress.length + 
+                                   stageCandidates.passed.length + 
+                                   stageCandidates.failed.length;
+                
+                const passRate = totalInStage > 0 ? 
+                    Math.round((stageCandidates.passed.length / totalInStage) * 100) : 0;
+                
                 const stageData = {
                     name: currentStage,
-                    total_candidates: allCandidates.length,
-                    pass_rate: 70 // ダミーデータ
+                    total_candidates: totalInStage,
+                    passed_candidates: stageCandidates.passed.length,
+                    failed_candidates: stageCandidates.failed.length,
+                    in_progress: stageCandidates.inProgress.length,
+                    pass_rate: passRate
                 };
+                
+                // 平均滞在日数を計算
+                let totalDays = 0;
+                let countWithDates = 0;
+                
+                [...stageCandidates.passed, ...stageCandidates.failed].forEach(c => {
+                    const stageInfo = c.recruitment_stages?.find(s => s.stage === currentStage);
+                    if (stageInfo?.scheduled_date && stageInfo?.completed_date) {
+                        const start = new Date(stageInfo.scheduled_date);
+                        const end = new Date(stageInfo.completed_date);
+                        const days = Math.floor((end - start) / (1000 * 60 * 60 * 24));
+                        if (days >= 0) {
+                            totalDays += days;
+                            countWithDates++;
+                        }
+                    }
+                });
                 
                 const durationData = {
-                    average_days: 5 // ダミーデータ
+                    average_days: countWithDates > 0 ? Math.round(totalDays / countWithDates) : 5
                 };
                 
-                updateHeader(stageData, durationData);
+                updateHeader(stageData, durationData, candidates);
                 
                 displayCandidates(allCandidates);
                 updateStageProgress(stageData);
@@ -523,18 +564,29 @@
         }
 
         // ヘッダー更新
-        function updateHeader(stageData, durationData) {
+        function updateHeader(stageData, durationData, candidates) {
             document.getElementById('stageName').textContent = currentStage;
             
             if (stageData) {
                 document.getElementById('totalCandidates').textContent = stageData.total_candidates || 0;
                 document.getElementById('passRate').textContent = (stageData.pass_rate || 0) + '%';
                 
-                const avgDays = durationData ? Math.round(parseFloat(durationData.avg_days) || 0) : 0;
+                const avgDays = durationData ? durationData.average_days : 0;
                 document.getElementById('avgDays').textContent = avgDays + '日';
                 
-                // 本日の処理数（ダミー）
-                const todayCount = Math.floor(Math.random() * 5);
+                // 本日の処理数を計算
+                const today = new Date().toISOString().split('T')[0];
+                let todayCount = 0;
+                
+                if (candidates) {
+                    candidates.forEach(c => {
+                        const stageInfo = c.recruitment_stages?.find(s => s.stage === currentStage);
+                        if (stageInfo?.completed_date === today) {
+                            todayCount++;
+                        }
+                    });
+                }
+                
                 document.getElementById('todayCount').textContent = todayCount;
             }
             
@@ -564,8 +616,17 @@
             }
 
             const html = candidates.map(c => {
-                // 滞在日数を計算（ダミー）
-                const days = Math.floor(Math.random() * 10) + 1;
+                // 滞在日数を計算
+                const stageInfo = c.recruitment_stages?.find(s => s.stage === currentStage);
+                let days = 0;
+                
+                if (stageInfo?.scheduled_date) {
+                    const startDate = new Date(stageInfo.scheduled_date);
+                    const today = new Date();
+                    days = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+                    days = Math.max(0, days); // 負の値を防ぐ
+                }
+                
                 const timeClass = days <= 3 ? 'time-fast' : days <= 7 ? 'time-normal' : 'time-slow';
                 
                 return `
@@ -617,20 +678,25 @@
 
         // ステージ進捗更新
         function updateStageProgress(stageData) {
-            if (!stageData) return;
+            if (!stageData || stageData.total_candidates === 0) {
+                document.getElementById('stageProgress').innerHTML = 
+                    '<p style="text-align: center; color: #999;">データがありません</p>';
+                return;
+            }
             
-            const total = parseInt(stageData.total_candidates) || 0;
-            const passed = parseInt(stageData.passed_candidates) || 0;
-            const failed = total - passed - allCandidates.length;
+            const total = stageData.total_candidates;
+            const passed = stageData.passed_candidates || 0;
+            const failed = stageData.failed_candidates || 0;
+            const inProgress = stageData.in_progress || 0;
             
             const html = `
                 <div style="margin-bottom: 15px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
                         <span>進行中</span>
-                        <span>${allCandidates.length}名</span>
+                        <span>${inProgress}名</span>
                     </div>
                     <div class="progress-bar">
-                        <div class="progress-fill" style="width: ${(allCandidates.length / total) * 100}%"></div>
+                        <div class="progress-fill" style="width: ${(inProgress / total) * 100}%"></div>
                     </div>
                 </div>
                 <div style="margin-bottom: 15px;">
