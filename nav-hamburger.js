@@ -89,11 +89,24 @@
                         box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
                     `;
                 }
-                hamburger.innerHTML = `
-                    <span style="display: block !important; width: 24px !important; height: 3px !important; background-color: #000 !important; margin: 0 !important; border-radius: 2px !important;"></span>
-                    <span style="display: block !important; width: 24px !important; height: 3px !important; background-color: #000 !important; margin: 0 !important; border-radius: 2px !important;"></span>
-                    <span style="display: block !important; width: 24px !important; height: 3px !important; background-color: #000 !important; margin: 0 !important; border-radius: 2px !important;"></span>
-                `;
+                // 3本線を作成（より確実な方法）
+                const spans = [];
+                for (let i = 0; i < 3; i++) {
+                    const span = document.createElement('span');
+                    span.style.cssText = `
+                        display: block !important;
+                        width: 22px !important;
+                        height: 3px !important;
+                        background-color: #000 !important;
+                        margin: 4px auto !important;
+                        border-radius: 2px !important;
+                        opacity: 1 !important;
+                        visibility: visible !important;
+                        transition: all 0.3s ease !important;
+                    `;
+                    spans.push(span);
+                    hamburger.appendChild(span);
+                }
                 
                 // デバッグ：ハンバーガーボタンのスタイルを確認
                 setTimeout(() => {
@@ -135,6 +148,18 @@
                     console.log('Hamburger clicked');
                     hamburger.classList.toggle('active');
                     navLinks.classList.toggle('active');
+                    
+                    // アニメーション効果を手動で適用
+                    const hamburgerSpans = hamburger.querySelectorAll('span');
+                    if (hamburger.classList.contains('active')) {
+                        if (hamburgerSpans[0]) hamburgerSpans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+                        if (hamburgerSpans[1]) hamburgerSpans[1].style.opacity = '0';
+                        if (hamburgerSpans[2]) hamburgerSpans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+                    } else {
+                        if (hamburgerSpans[0]) hamburgerSpans[0].style.transform = '';
+                        if (hamburgerSpans[1]) hamburgerSpans[1].style.opacity = '1';
+                        if (hamburgerSpans[2]) hamburgerSpans[2].style.transform = '';
+                    }
                 });
                 
                 // メニュー外クリックで閉じる
@@ -142,6 +167,11 @@
                     if (!nav.contains(event.target)) {
                         hamburger.classList.remove('active');
                         navLinks.classList.remove('active');
+                        // アニメーションリセット
+                        const hamburgerSpans = hamburger.querySelectorAll('span');
+                        if (hamburgerSpans[0]) hamburgerSpans[0].style.transform = '';
+                        if (hamburgerSpans[1]) hamburgerSpans[1].style.opacity = '1';
+                        if (hamburgerSpans[2]) hamburgerSpans[2].style.transform = '';
                     }
                 });
                 
@@ -152,6 +182,11 @@
                         if (window.innerWidth <= 768) {
                             hamburger.classList.remove('active');
                             navLinks.classList.remove('active');
+                            // アニメーションリセット
+                            const hamburgerSpans = hamburger.querySelectorAll('span');
+                            if (hamburgerSpans[0]) hamburgerSpans[0].style.transform = '';
+                            if (hamburgerSpans[1]) hamburgerSpans[1].style.opacity = '1';
+                            if (hamburgerSpans[2]) hamburgerSpans[2].style.transform = '';
                         }
                     });
                 });

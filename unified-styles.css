@@ -121,48 +121,69 @@ nav > div {
 
 /* ハンバーガーメニューボタン */
 .hamburger {
-    display: none;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 5px;
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1001;
-    width: 35px;
-    height: 35px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: none !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 2px solid #333 !important;
+    border-radius: 6px !important;
+    cursor: pointer !important;
+    padding: 8px !important;
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    z-index: 1001 !important;
+    width: 45px !important;
+    height: 45px !important;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.2) !important;
 }
 
 .hamburger:hover {
-    background: rgba(255, 255, 255, 1);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    background: rgba(255, 255, 255, 1) !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25) !important;
+    transform: translateY(-52%) !important;
 }
 
-.hamburger span {
+/* ハンバーガーの3本線 - より強力なスタイル */
+.hamburger > div,
+.hamburger span,
+.hamburger .hamburger-line {
     display: block !important;
-    width: 22px !important;
-    height: 3px !important;
+    width: 28px !important;
+    height: 4px !important;
     background-color: #000 !important;
-    margin: 4px auto !important;
-    transition: all 0.3s ease;
-    border-radius: 2px;
+    border-radius: 2px !important;
+    transition: all 0.3s ease !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    outline: none !important;
 }
 
-.hamburger.active span:nth-child(1) {
-    transform: rotate(45deg) translate(5px, 5px);
+/* ハンバーガーアクティブ時のアニメーション */
+.hamburger.active > div:nth-child(1),
+.hamburger.active span:nth-child(1),
+.hamburger.active .hamburger-line:nth-child(1) {
+    transform: rotate(45deg) translate(8px, 8px) !important;
 }
 
-.hamburger.active span:nth-child(2) {
-    opacity: 0;
+.hamburger.active > div:nth-child(2),
+.hamburger.active span:nth-child(2),
+.hamburger.active .hamburger-line:nth-child(2) {
+    opacity: 0 !important;
 }
 
-.hamburger.active span:nth-child(3) {
-    transform: rotate(-45deg) translate(7px, -6px);
+.hamburger.active > div:nth-child(3),
+.hamburger.active span:nth-child(3),
+.hamburger.active .hamburger-line:nth-child(3) {
+    transform: rotate(-45deg) translate(8px, -8px) !important;
 }
+
 
 /* ナビゲーションリンクコンテナ */
 .nav-links {

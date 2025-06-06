@@ -149,10 +149,10 @@
                 message: navDiv ? '✓ div要素が見つかりました' : '✗ div要素が見つかりません'
             });
             
-            // Test 3: nav-hamburger.jsの読み込み
-            const hamburgerScript = document.querySelector('script[src="nav-hamburger.js"]');
+            // Test 3: nav-hamburger-final.jsの読み込み
+            const hamburgerScript = document.querySelector('script[src="nav-hamburger-final.js"]');
             tests.push({
-                name: 'nav-hamburger.jsの読み込み',
+                name: 'nav-hamburger-final.jsの読み込み',
                 status: hamburgerScript ? 'OK' : 'ERROR',
                 message: hamburgerScript ? '✓ スクリプトが読み込まれています' : '✗ スクリプトが読み込まれていません'
             });
@@ -194,6 +194,6 @@
         // テスト実行
         window.addEventListener('DOMContentLoaded', runTests);
     </script>
-    <script src="nav-hamburger.js"></script>
+    <script src="nav-hamburger-final.js"></script>
 </body>
 </html>
