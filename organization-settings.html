@@ -480,10 +480,6 @@
                     <input type="text" class="form-control" id="departmentName" required>
                 </div>
                 <div class="form-group">
-                    <label for="departmentCode">部門コード</label>
-                    <input type="text" class="form-control" id="departmentCode" placeholder="例: RD, QA, MKT">
-                </div>
-                <div class="form-group">
                     <label for="departmentDescription">説明</label>
                     <textarea class="form-control" id="departmentDescription" rows="3"></textarea>
                 </div>
@@ -585,11 +581,11 @@
                 console.error('部門データの読み込みエラー:', error);
                 // デフォルトデータを表示
                 departments = [
-                    { id: 1, name: '研究開発本部', code: 'RD' },
-                    { id: 2, name: '生産技術部', code: 'PT' },
-                    { id: 3, name: '品質保証部', code: 'QA' },
-                    { id: 4, name: 'マーケティング部', code: 'MKT' },
-                    { id: 5, name: '人事総務部', code: 'HR' }
+                    { id: 1, name: '研究開発本部' },
+                    { id: 2, name: '生産技術部' },
+                    { id: 3, name: '品質保証部' },
+                    { id: 4, name: 'マーケティング部' },
+                    { id: 5, name: '人事総務部' }
                 ];
                 displayDepartments();
                 updateDepartmentSelect();
@@ -610,8 +606,7 @@
                     <div class="item-info">
                         <div class="item-name">${dept.name}</div>
                         <div class="item-details">
-                            ${dept.code ? `コード: ${dept.code}` : ''}
-                            ${dept.position_count ? ` | ${dept.position_count}職種` : ''}
+                            ${dept.position_count ? `${dept.position_count}職種` : '0職種'}
                         </div>
                     </div>
                     <div class="item-actions">
@@ -657,7 +652,7 @@
                     <div class="position-header">
                         <div>
                             <div class="position-title">${pos.title}</div>
-                            <div class="position-department">${pos.department_name || '未設定'}</div>
+                            <div class="position-department">${pos.departments?.name || '未設定'}</div>
                         </div>
                         <div class="item-actions">
                             <button class="btn btn-warning btn-sm" onclick="editPosition(${pos.id})">編集</button>
@@ -732,7 +727,6 @@
             
             document.getElementById('departmentId').value = dept.id;
             document.getElementById('departmentName').value = dept.name;
-            document.getElementById('departmentCode').value = dept.code || '';
             document.getElementById('departmentDescription').value = dept.description || '';
             document.getElementById('departmentModalTitle').textContent = '部門を編集';
             document.getElementById('departmentModal').style.display = 'flex';
@@ -759,7 +753,6 @@
             const id = document.getElementById('departmentId').value;
             const data = {
                 name: document.getElementById('departmentName').value,
-                code: document.getElementById('departmentCode').value,
                 description: document.getElementById('departmentDescription').value
             };
             
