@@ -170,7 +170,7 @@
     </div>
 
     <script>
-        // Supabaseクライアントは supabase-config.js で定義済み
+        const supabase = window.SUPABASE_CLIENT;
         let departmentChart = null;
         let sourceChart = null;
 
@@ -193,7 +193,7 @@
                 const funnelData = {};
 
                 for (const stage of stages) {
-                    const { data, error } = await window.SUPABASE_CLIENT
+                    const { data, error } = await supabase
                         .from('recruitment_stages')
                         .select('id')
                         .eq('stage', stage)
@@ -206,7 +206,7 @@
                 displayFunnel(funnelData);
 
                 // 部署別進捗
-                const { data: positions, error: posError } = await window.SUPABASE_CLIENT
+                const { data: positions, error: posError } = await supabase
                     .from('positions')
                     .select('*, departments(name), candidates(id)');
                 
@@ -214,7 +214,7 @@
                 displayDepartmentChart(positions);
 
                 // 応募経路分析
-                const { data: candidates, error: candError } = await window.SUPABASE_CLIENT
+                const { data: candidates, error: candError } = await supabase
                     .from('candidates')
                     .select('source');
                 
@@ -222,7 +222,7 @@
                 displaySourceChart(candidates);
 
                 // 最近の活動
-                const { data: recentCandidates, error: recentError } = await window.SUPABASE_CLIENT
+                const { data: recentCandidates, error: recentError } = await supabase
                     .from('candidates')
                     .select('*')
                     .order('created_at', { ascending: false })
