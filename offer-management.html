@@ -523,14 +523,14 @@
                 // 各候補者のオファー情報を取得
                 for (const candidate of offerCandidates) {
                     const { data: offers, error: offerError } = await window.SUPABASE_CLIENT
-                        .from('job_offers')
+                        .from('offers')
                         .select('*')
                         .eq('candidate_id', candidate.id);
                     
                     if (!offerError && offers) {
-                        candidate.job_offers = offers;
+                        candidate.offers = offers;
                     } else {
-                        candidate.job_offers = [];
+                        candidate.offers = [];
                     }
                 }
                 
@@ -552,14 +552,14 @@
             }
 
             const html = candidates.map(c => {
-                // job_offersテーブルからデータを取得、なければデフォルト値
-                const offer = c.job_offers && c.job_offers.length > 0 ? c.job_offers[0] : null;
+                // offersテーブルからデータを取得、なければデフォルト値
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
                 console.log('Candidate:', c.name);
                 console.log('Raw offer data:', offer);
-                console.log('job_offers array:', c.job_offers);
+                console.log('offers array:', c.offers);
                 
                 const offerData = {
-                    salary: offer && offer.salary_offered ? Math.floor(offer.salary_offered / 10000) : null,
+                    salary: offer && offer.salary ? Math.floor(offer.salary / 10000) : null,
                     startDate: offer?.start_date || null,
                     deadline: offer?.response_deadline || null,
                     status: offer?.status || null
@@ -580,6 +580,10 @@
                     'accepted': 'accepted',
                     'rejected': 'rejected',
                     'negotiating': 'negotiating',
+                    '提示中': 'pending',
+                    '承諾': 'accepted',
+                    '辞退': 'rejected',
+                    '取消': 'rejected',
                     '未設定': 'pending'
                 }[displayStatus] || 'pending';
 
@@ -646,11 +650,11 @@
         function updateStatistics(candidates) {
             const total = candidates.length;
             const accepted = candidates.filter(c => {
-                const offer = c.job_offers && c.job_offers.length > 0 ? c.job_offers[0] : null;
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
                 return offer?.status === 'accepted' || offer?.status === '承諾';
             }).length;
             const pending = candidates.filter(c => {
-                const offer = c.job_offers && c.job_offers.length > 0 ? c.job_offers[0] : null;
+                const offer = c.offers && c.offers.length > 0 ? c.offers[0] : null;
                 return !offer || offer.status === 'pending' || offer.status === '提示中';
             }).length;
             const acceptanceRate = total > 0 ? Math.round((accepted / total) * 100) : 0;
@@ -667,7 +671,11 @@
                 'pending': '回答待ち',
                 'accepted': '承諾',
                 'rejected': '辞退',
-                'negotiating': '交渉中'
+                'negotiating': '交渉中',
+                '提示中': '回答待ち',
+                '承諾': '承諾',
+                '辞退': '辞退',
+                '取消': '取消'
             };
             return texts[status] || '回答待ち';
         }
@@ -734,17 +742,17 @@
                 const offerData = {
                     candidate_id: candidateId,
                     position_id: positionId,
-                    salary_offered: salary,
+                    salary: salary,
                     start_date: data.start_date,
-                    offer_sent_date: new Date().toISOString().split('T')[0],
+                    offer_date: new Date().toISOString().split('T')[0],
                     response_deadline: data.response_deadline,
-                    status: 'pending'
+                    status: '提示中'
                 };
                 
                 console.log('Creating offer with data:', offerData);
                 
                 const { error } = await window.SUPABASE_CLIENT
-                    .from('job_offers')
+                    .from('offers')
                     .insert([offerData]);
                 
                 if (error) throw error;
@@ -785,12 +793,12 @@
             const statusJp = status === 'accepted' ? '承諾' : '辞退';
             if (confirm(`この内定を「${statusJp}」として記録しますか？`)) {
                 try {
-                    // job_offersテーブルのステータスを更新
-                    const statusEn = status === 'accepted' ? 'accepted' : 'rejected';
+                    // offersテーブルのステータスを更新
+                    const statusJp = status === 'accepted' ? '承諾' : '辞退';
                     const { error: offerError } = await window.SUPABASE_CLIENT
-                        .from('job_offers')
+                        .from('offers')
                         .update({ 
-                            status: statusEn
+                            status: statusJp
                         })
                         .eq('candidate_id', candidateId);
                     
@@ -873,9 +881,9 @@
             const deadline = document.getElementById('edit_response_deadline').value;
             
             try {
-                // job_offersテーブルを更新
+                // offersテーブルを更新
                 const updateData = {
-                    salary_offered: salary,
+                    salary: salary,
                     start_date: startDate,
                     response_deadline: deadline
                 };
@@ -883,7 +891,7 @@
                 console.log('Updating offer for candidate', candidateId, 'with data:', updateData);
                 
                 const { error } = await window.SUPABASE_CLIENT
-                    .from('job_offers')
+                    .from('offers')
                     .update(updateData)
                     .eq('candidate_id', candidateId);
                 
@@ -907,15 +915,15 @@
                         
                         // 新規オファーを作成
                         const { error: insertError } = await window.SUPABASE_CLIENT
-                            .from('job_offers')
+                            .from('offers')
                             .insert([{
                                 candidate_id: candidateId,
                                 position_id: candidate.position_id,
-                                salary_offered: salary,
+                                salary: salary,
                                 start_date: startDate,
                                 response_deadline: deadline,
-                                offer_sent_date: new Date().toISOString().split('T')[0],
-                                status: 'pending'
+                                offer_date: new Date().toISOString().split('T')[0],
+                                status: '提示中'
                             }]);
                         
                         if (insertError) throw insertError;
