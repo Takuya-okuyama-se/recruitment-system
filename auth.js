@@ -18,10 +18,16 @@
         DEMO_PARAM: 'demo'
     };
     
-    // 現在のモードを判定（デモブランチでは常にデモモード）
+    // 現在のモードを判定
     function getCurrentMode() {
-        // デモ環境では常にデモモードを強制
-        return 'demo';
+        const urlParams = new URLSearchParams(window.location.search);
+        const savedMode = localStorage.getItem(CONFIG.MODE_KEY);
+        
+        if (urlParams.has(CONFIG.DEMO_PARAM)) {
+            return 'demo';
+        }
+        
+        return savedMode || 'admin';
     }
     
     // セッション情報を保存
