@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>デモモード動作確認</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #FF6B35;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .info {
+            color: #17a2b8;
+        }
+        .page-link {
+            display: inline-block;
+            margin: 5px;
+            padding: 8px 15px;
+            background: #FF6B35;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .page-link:hover {
+            background: #e55a2b;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .log-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <script src="auth.js"></script>
+    <script src="demo-data.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 デモモード動作確認テスト</h1>
+        
+        <div class="test-section">
+            <h2>📋 修正内容の概要</h2>
+            <p>以下の修正を実施しました：</p>
+            <ul>
+                <li>✅ <code>demo-data.js</code>: authCompleteイベントを監視して、デモモード時に即座にSupabaseクライアントをオーバーライド</li>
+                <li>✅ <code>dashboard.html</code>: デモモード時はdemoDataReadyイベントを待ってからデータを読み込み</li>
+                <li>✅ 各ページ: 認証完了を待ってから初期化し、デモモード時はデモデータの準備を待つ</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🔍 現在の状態確認</h2>
+            <div id="statusCheck">確認中...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 デモデータ確認</h2>
+            <button onclick="testDemoData()">デモデータをテスト</button>
+            <div id="demoDataResult"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🚀 ページテストリンク</h2>
+            <p>以下のリンクをクリックして、各ページでデモモードが正しく動作することを確認してください：</p>
+            
+            <div style="margin: 10px 0;">
+                <strong>修正済みページ：</strong><br>
+                <a href="dashboard.html?demo" class="page-link" target="_blank">📊 ダッシュボード</a>
+                <a href="candidate-form.html?demo" class="page-link" target="_blank">👤 候補者登録</a>
+                <a href="evaluation-form.html?demo" class="page-link" target="_blank">📝 面接評価</a>
+                <a href="data-management.html?demo" class="page-link" target="_blank">📈 データ管理</a>
+                <a href="organization-settings.html?demo" class="page-link" target="_blank">⚙️ 組織設定</a>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📝 コンソールログ</h2>
+            <p>ブラウザの開発者ツール（F12）でコンソールを確認すると、以下のようなログが表示されるはずです：</p>
+            <div class="log-output">
+                🎯 Auth complete event received in demo-data.js {mode: "demo"}<br>
+                🎯 Demo mode detected on auth complete, setting up immediately<br>
+                🎯 Setting up demo Supabase client...<br>
+                🎯 Demo Supabase client ready<br>
+                Demo data ready, loading dashboard...<br>
+                🎯 Demo query: candidates<br>
+                🎯 Demo query result: candidates [6 records]<br>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ 期待される動作</h2>
+            <ol>
+                <li>?demoパラメータ付きでページにアクセス</li>
+                <li>パスワード「demo2024」でログイン</li>
+                <li>デモデータが表示される（実際のSupabaseデータではない）</li>
+                <li>ページ間を移動してもデモモードが維持される</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // 状態確認
+        function checkStatus() {
+            const statusDiv = document.getElementById('statusCheck');
+            let html = '';
+            
+            // AuthSystemの確認
+            if (window.AuthSystem) {
+                html += '<p class="success">✅ AuthSystem: 利用可能</p>';
+                html += `<p class="info">　　isDemoMode: ${window.AuthSystem.isDemoMode()}</p>`;
+                html += `<p class="info">　　isSessionValid: ${window.AuthSystem.isSessionValid()}</p>`;
+            } else {
+                html += '<p class="error">❌ AuthSystem: 未定義</p>';
+            }
+            
+            // DemoDataの確認
+            if (window.DemoData) {
+                html += '<p class="success">✅ DemoData: 利用可能</p>';
+            } else {
+                html += '<p class="error">❌ DemoData: 未定義</p>';
+            }
+            
+            // Supabaseクライアントの確認
+            if (window.SUPABASE_CLIENT) {
+                html += '<p class="success">✅ SUPABASE_CLIENT: 利用可能</p>';
+                html += `<p class="info">　　_demoOverridden: ${window.SUPABASE_CLIENT._demoOverridden || false}</p>`;
+            } else {
+                html += '<p class="error">❌ SUPABASE_CLIENT: 未定義</p>';
+            }
+            
+            statusDiv.innerHTML = html;
+        }
+        
+        // デモデータテスト
+        async function testDemoData() {
+            const resultDiv = document.getElementById('demoDataResult');
+            resultDiv.innerHTML = '<p>テスト中...</p>';
+            
+            try {
+                // 候補者データを取得
+                const { data: candidates, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select('*')
+                    .limit(3);
+                
+                if (error) {
+                    resultDiv.innerHTML = `<p class="error">エラー: ${error.message}</p>`;
+                    return;
+                }
+                
+                let html = '<h3>取得したデータ（最初の3件）:</h3>';
+                
+                if (window.AuthSystem && window.AuthSystem.isDemoMode()) {
+                    html += '<p class="success">✅ デモモードで動作中</p>';
+                } else {
+                    html += '<p class="error">⚠️ デモモードではありません</p>';
+                }
+                
+                html += '<pre style="background: #f0f0f0; padding: 10px; border-radius: 5px; overflow-x: auto;">';
+                html += JSON.stringify(candidates, null, 2);
+                html += '</pre>';
+                
+                // デモデータかチェック
+                if (candidates && candidates.length > 0) {
+                    const firstCandidate = candidates[0];
+                    if (firstCandidate.name === '山田太郎' || firstCandidate.name === '佐藤花子') {
+                        html += '<p class="success">✅ デモデータが正しく表示されています</p>';
+                    } else {
+                        html += '<p class="error">⚠️ 実際のデータが表示されている可能性があります</p>';
+                    }
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (e) {
+                resultDiv.innerHTML = `<p class="error">例外: ${e.message}</p>`;
+            }
+        }
+        
+        // 認証完了を待つ
+        document.addEventListener('authComplete', function(e) {
+            console.log('Test page: Auth completed', e.detail);
+            checkStatus();
+        });
+        
+        // ページ読み込み時
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                checkStatus();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

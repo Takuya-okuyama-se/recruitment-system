@@ -227,7 +227,7 @@
     </style>
         <link rel="stylesheet" href="unified-styles.css">
     <script src="auth.js"></script>
-    <script src="demo-data.js"></script>
+    <script src="demo-data-fixed.js"></script>
 </head>
 <body>
 
@@ -615,8 +615,24 @@
         }
 
         // 初期読み込み
-        loadStats();
-        loadTable('candidates');
+        async function init() {
+            // デモモードの場合は、デモデータが準備されるまで待機
+            if (new URLSearchParams(window.location.search).get('demo') === 'true') {
+                await new Promise(resolve => {
+                    if (window.demoDataReady) {
+                        resolve();
+                    } else {
+                        window.addEventListener('demoDataReady', resolve);
+                    }
+                });
+            }
+            
+            loadStats();
+            loadTable('candidates');
+        }
+        
+        // 認証後に初期化
+        window.addEventListener('authComplete', init);
     </script>
     <script src="nav-hamburger-final.js"></script>
     </body>

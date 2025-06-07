@@ -1,4 +1,4 @@
-// デモデータ管理システム
+// デモデータ管理システム（修正版）
 (function() {
     'use strict';
     
@@ -227,22 +227,37 @@
         ]
     };
     
-    // デモモードかチェック
+    // デモモードかチェック（改善版）
     function isDemoMode() {
-        if (!window.AuthSystem) {
-            console.log('🎯 AuthSystem not found, checking URL for demo mode');
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.has('demo');
+        // URLパラメータを最優先
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('demo')) {
+            console.log('🎯 Demo mode detected from URL parameter');
+            return true;
         }
         
-        if (typeof window.AuthSystem.isDemoMode !== 'function') {
-            console.log('🎯 AuthSystem.isDemoMode is not a function');
-            return false;
+        // AuthSystemが利用可能な場合
+        if (window.AuthSystem && typeof window.AuthSystem.isDemoMode === 'function') {
+            const result = window.AuthSystem.isDemoMode();
+            console.log('🎯 Demo mode from AuthSystem:', result);
+            return result;
         }
         
-        const result = window.AuthSystem.isDemoMode();
-        console.log('🎯 Demo mode from AuthSystem:', result);
-        return result;
+        // セッション情報をチェック
+        try {
+            const session = localStorage.getItem('recruitment_session');
+            if (session) {
+                const sessionData = JSON.parse(session);
+                if (sessionData.mode === 'demo') {
+                    console.log('🎯 Demo mode detected from session');
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.error('Session check error:', e);
+        }
+        
+        return false;
     }
     
     // デモデータを返す関数
@@ -306,131 +321,139 @@
             return;
         }
         
-        if (!window.SUPABASE_CLIENT) {
-            console.log('🎯 SUPABASE_CLIENT not found, skipping setup');
-            return;
-        }
-        
-        console.log('🎯 Setting up demo Supabase client...');
-        
-        // 既にオーバーライド済みの場合はスキップ
-        if (window.SUPABASE_CLIENT._demoOverridden) {
-            console.log('🎯 Demo Supabase client already overridden');
-            return;
-        }
-        
-        // オリジナルのfromメソッドを保存
-        const originalFrom = window.SUPABASE_CLIENT.from.bind(window.SUPABASE_CLIENT);
-        window.SUPABASE_CLIENT._originalFrom = originalFrom;
-        window.SUPABASE_CLIENT._demoOverridden = true;
-        
-        // fromメソッドをオーバーライド
-        window.SUPABASE_CLIENT.from = function(tableName) {
-            console.log(`🎯 Demo query: ${tableName}`);
+        // Supabaseクライアントが存在するまで待つ
+        function waitForSupabase() {
+            if (!window.SUPABASE_CLIENT) {
+                console.log('🎯 Waiting for SUPABASE_CLIENT...');
+                setTimeout(waitForSupabase, 50);
+                return;
+            }
             
-            const queryBuilder = {
-                tableName: tableName,
-                columns: '*',
-                filters: {},
-                orderBy: null,
-                limitCount: null,
-                isSingle: false,
+            console.log('🎯 SUPABASE_CLIENT found, setting up demo override...');
+            
+            // 既にオーバーライド済みの場合はスキップ
+            if (window.SUPABASE_CLIENT._demoOverridden) {
+                console.log('🎯 Demo Supabase client already overridden');
+                return;
+            }
+            
+            // オリジナルのfromメソッドを保存
+            const originalFrom = window.SUPABASE_CLIENT.from.bind(window.SUPABASE_CLIENT);
+            window.SUPABASE_CLIENT._originalFrom = originalFrom;
+            window.SUPABASE_CLIENT._demoOverridden = true;
+            
+            // fromメソッドをオーバーライド
+            window.SUPABASE_CLIENT.from = function(tableName) {
+                console.log(`🎯 Demo query: ${tableName}`);
                 
-                select: function(columns = '*') {
-                    this.columns = columns;
-                    return this;
-                },
+                const queryBuilder = {
+                    tableName: tableName,
+                    columns: '*',
+                    filters: {},
+                    orderBy: null,
+                    limitCount: null,
+                    isSingle: false,
+                    
+                    select: function(columns = '*') {
+                        this.columns = columns;
+                        return this;
+                    },
+                    
+                    insert: function(data) {
+                        console.log(`🎯 Demo insert blocked: ${tableName}`, data);
+                        return Promise.resolve({
+                            data: Array.isArray(data) ? data : [data],
+                            error: null
+                        });
+                    },
+                    
+                    update: function(data) {
+                        console.log(`🎯 Demo update blocked: ${tableName}`, data);
+                        this.updateData = data;
+                        return this;
+                    },
+                    
+                    delete: function() {
+                        console.log(`🎯 Demo delete blocked: ${tableName}`);
+                        return this;
+                    },
+                    
+                    eq: function(column, value) {
+                        this.filters = this.filters || {};
+                        this.filters.eq = this.filters.eq || {};
+                        this.filters.eq[column] = value;
+                        return this;
+                    },
+                    
+                    in: function(column, values) {
+                        this.filters = this.filters || {};
+                        this.filters.in = this.filters.in || {};
+                        this.filters.in[column] = values;
+                        return this;
+                    },
+                    
+                    order: function(column, options = {}) {
+                        this.orderBy = { column, ...options };
+                        return this;
+                    },
+                    
+                    limit: function(count) {
+                        this.limitCount = count;
+                        return this;
+                    },
+                    
+                    single: function() {
+                        this.isSingle = true;
+                        return this;
+                    },
+                    
+                    then: function(onResolve, onReject) {
+                        return new Promise((resolve) => {
+                            let data = getDemoData(this.tableName, this.filters);
+                            
+                            if (!data) {
+                                resolve({ data: [], error: null });
+                                return;
+                            }
+                            
+                            // ソート適用
+                            if (this.orderBy) {
+                                data.sort((a, b) => {
+                                    const aVal = a[this.orderBy.column];
+                                    const bVal = b[this.orderBy.column];
+                                    
+                                    if (this.orderBy.ascending === false) {
+                                        return bVal > aVal ? 1 : -1;
+                                    }
+                                    return aVal > bVal ? 1 : -1;
+                                });
+                            }
+                            
+                            // リミット適用
+                            if (this.limitCount) {
+                                data = data.slice(0, this.limitCount);
+                            }
+                            
+                            // 単一レコード
+                            if (this.isSingle) {
+                                data = data[0] || null;
+                            }
+                            
+                            console.log(`🎯 Demo query result: ${this.tableName}`, data);
+                            resolve({ data, error: null });
+                        }).then(onResolve, onReject);
+                    }
+                };
                 
-                insert: function(data) {
-                    console.log(`🎯 Demo insert blocked: ${tableName}`, data);
-                    return Promise.resolve({
-                        data: Array.isArray(data) ? data : [data],
-                        error: null
-                    });
-                },
-                
-                update: function(data) {
-                    console.log(`🎯 Demo update blocked: ${tableName}`, data);
-                    this.updateData = data;
-                    return this;
-                },
-                
-                delete: function() {
-                    console.log(`🎯 Demo delete blocked: ${tableName}`);
-                    return this;
-                },
-                
-                eq: function(column, value) {
-                    this.filters = this.filters || {};
-                    this.filters.eq = this.filters.eq || {};
-                    this.filters.eq[column] = value;
-                    return this;
-                },
-                
-                in: function(column, values) {
-                    this.filters = this.filters || {};
-                    this.filters.in = this.filters.in || {};
-                    this.filters.in[column] = values;
-                    return this;
-                },
-                
-                order: function(column, options = {}) {
-                    this.orderBy = { column, ...options };
-                    return this;
-                },
-                
-                limit: function(count) {
-                    this.limitCount = count;
-                    return this;
-                },
-                
-                single: function() {
-                    this.isSingle = true;
-                    return this;
-                },
-                
-                then: function(onResolve, onReject) {
-                    return new Promise((resolve) => {
-                        let data = getDemoData(this.tableName, this.filters);
-                        
-                        if (!data) {
-                            resolve({ data: [], error: null });
-                            return;
-                        }
-                        
-                        // ソート適用
-                        if (this.orderBy) {
-                            data.sort((a, b) => {
-                                const aVal = a[this.orderBy.column];
-                                const bVal = b[this.orderBy.column];
-                                
-                                if (this.orderBy.ascending === false) {
-                                    return bVal > aVal ? 1 : -1;
-                                }
-                                return aVal > bVal ? 1 : -1;
-                            });
-                        }
-                        
-                        // リミット適用
-                        if (this.limitCount) {
-                            data = data.slice(0, this.limitCount);
-                        }
-                        
-                        // 単一レコード
-                        if (this.isSingle) {
-                            data = data[0] || null;
-                        }
-                        
-                        console.log(`🎯 Demo query result: ${this.tableName}`, data);
-                        resolve({ data, error: null });
-                    }).then(onResolve, onReject);
-                }
+                return queryBuilder;
             };
             
-            return queryBuilder;
-        };
+            console.log('🎯 Demo Supabase client ready');
+            notifyDemoReady();
+        }
         
-        console.log('🎯 Demo Supabase client ready');
+        // Supabaseクライアントの初期化を待つ
+        waitForSupabase();
     }
     
     // デモデータ読み込み完了を通知
@@ -442,13 +465,20 @@
         document.dispatchEvent(event);
     }
     
-    // 初期化
+    // 初期化（改善版）
     function init() {
-        if (isDemoMode()) {
-            console.log('🎯 Demo data system initializing...');
+        console.log('🎯 Demo data system initializing...');
+        
+        // URLにdemoパラメータがある場合は即座にセットアップ
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('demo')) {
+            console.log('🎯 Demo parameter found in URL, setting up immediately');
             setupDemoSupabase();
-            notifyDemoReady();
-            console.log('🎯 Demo data system ready');
+        } else if (isDemoMode()) {
+            console.log('🎯 Demo mode detected, setting up...');
+            setupDemoSupabase();
+        } else {
+            console.log('🎯 Not in demo mode');
         }
     }
     
@@ -456,27 +486,35 @@
     window.DemoData = {
         getDemoData,
         DEMO_DATA,
-        isDemoMode
+        isDemoMode,
+        setupDemoSupabase // 外部から呼び出せるようにする
     };
     
-    // 認証システムの後に初期化
+    // 即座に初期化を試みる
+    init();
+    
+    // DOMContentLoadedでも初期化
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            // AuthSystemが初期化されるのを待つ
-            setTimeout(init, 100);  // 500ms -> 100ms に短縮
-        });
-    } else {
-        // 既にDOMが読み込まれている場合
-        setTimeout(init, 100);  // 500ms -> 100ms に短縮
+        document.addEventListener('DOMContentLoaded', init);
     }
     
-    // authCompleteイベントを監視して、ログイン直後にデモモードを設定
+    // authCompleteイベントを監視
     document.addEventListener('authComplete', function(e) {
         console.log('🎯 Auth complete event received in demo-data.js', e.detail);
         if (e.detail && e.detail.mode === 'demo') {
-            console.log('🎯 Demo mode detected on auth complete, setting up immediately');
+            console.log('🎯 Demo mode detected on auth complete, setting up...');
             setupDemoSupabase();
-            notifyDemoReady();
         }
+    });
+    
+    // Vercel環境での追加の初期化タイミング
+    // ページ読み込み後に再度チェック
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (isDemoMode() && window.SUPABASE_CLIENT && !window.SUPABASE_CLIENT._demoOverridden) {
+                console.log('🎯 Late initialization for demo mode on Vercel');
+                setupDemoSupabase();
+            }
+        }, 100);
     });
 })();

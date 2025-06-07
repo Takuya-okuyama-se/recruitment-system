@@ -213,7 +213,7 @@
     </style>
     <link rel="stylesheet" href="unified-styles.css">
     <script src="auth.js"></script>
-    <script src="demo-data.js"></script>
+    <script src="demo-data-fixed.js"></script>
 </head>
 <body>
     <nav>
@@ -627,7 +627,58 @@
         }
 
         // ページ読み込み時
-        window.addEventListener('DOMContentLoaded', loadCandidates);
+        // 認証完了を待ってから初期化
+        function initializeAfterAuth() {
+            console.log('Initializing page after auth...');
+            
+            // デモモードかチェック
+            if (window.AuthSystem && window.AuthSystem.isDemoMode()) {
+                console.log('Demo mode active, waiting for demo data...');
+                
+                // デモデータの準備完了を待つ
+                const demoReadyHandler = function() {
+                    console.log('Demo data ready, initializing page...');
+                    loadCandidates();
+                };
+                
+                // 既にデモデータが準備済みかチェック
+                if (window.DemoData && window.SUPABASE_CLIENT._demoOverridden) {
+                    console.log('Demo data already ready');
+                    demoReadyHandler();
+                } else {
+                    document.addEventListener('demoDataReady', demoReadyHandler, { once: true });
+                    
+                    // フォールバック: 1秒後にまだロードされていなければ強制的にロード
+                    setTimeout(function() {
+                        if (!window._pageInitialized) {
+                            console.log('Demo data timeout, initializing anyway...');
+                            window._pageInitialized = true;
+                            loadCandidates();
+                        }
+                    }, 1000);
+                }
+            } else {
+                // 通常モードの場合はすぐに初期化
+                window._pageInitialized = true;
+                loadCandidates();
+            }
+        }
+        
+        // 認証完了イベントを待つ
+        document.addEventListener('authComplete', function(e) {
+            console.log('Auth completed, initializing page...', e.detail);
+            initializeAfterAuth();
+        });
+        
+        // 既にログイン済みの場合の処理
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(function() {
+                if (window.AuthSystem && window.AuthSystem.isSessionValid() && !window._pageInitialized) {
+                    console.log('Already logged in, initializing page...');
+                    initializeAfterAuth();
+                }
+            }, 200);
+        });
     </script>
     <script src="nav-hamburger-final.js"></script>
 </body>

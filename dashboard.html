@@ -123,7 +123,7 @@
     </style>
     <link rel="stylesheet" href="unified-styles.css">
     <script src="auth.js"></script>
-    <script src="demo-data.js"></script>
+    <script src="demo-data-fixed.js"></script>
 </head>
 <body>
 
@@ -209,6 +209,13 @@
 
         // データの取得と表示
         async function loadDashboard() {
+            // 重複ロードを防ぐ
+            if (window._dashboardLoaded) {
+                console.log('Dashboard already loaded, skipping...');
+                return;
+            }
+            window._dashboardLoaded = true;
+            
             try {
                 console.log('Loading dashboard data...');
                 
@@ -407,8 +414,28 @@
 
         // 認証完了を待ってからデータを取得
         document.addEventListener('authComplete', function(e) {
-            console.log('Auth completed, loading dashboard...');
-            loadDashboard();
+            console.log('Auth completed, loading dashboard...', e.detail);
+            
+            // デモモードの場合は、デモデータの準備完了を待つ
+            if (e.detail && e.detail.mode === 'demo') {
+                console.log('Demo mode detected, waiting for demo data...');
+                // デモデータの準備完了を待つ
+                document.addEventListener('demoDataReady', function() {
+                    console.log('Demo data ready, loading dashboard...');
+                    loadDashboard();
+                }, { once: true });
+                
+                // フォールバック: 1秒後にまだロードされていなければ強制的にロード
+                setTimeout(function() {
+                    if (!window._dashboardLoaded) {
+                        console.log('Demo data timeout, loading dashboard anyway...');
+                        loadDashboard();
+                    }
+                }, 1000);
+            } else {
+                // 通常モードの場合はすぐにロード
+                loadDashboard();
+            }
         });
         
         // ページ読み込み時にもチェック（既にログイン済みの場合）
@@ -416,8 +443,28 @@
             // 少し待ってから、既にログイン済みかチェック
             setTimeout(function() {
                 if (window.AuthSystem && window.AuthSystem.isSessionValid()) {
-                    console.log('Already logged in, loading dashboard...');
-                    loadDashboard();
+                    console.log('Already logged in, checking mode...');
+                    
+                    // デモモードかチェック
+                    if (window.AuthSystem.isDemoMode()) {
+                        console.log('Demo mode active, waiting for demo data...');
+                        // デモデータの準備完了を待つ
+                        document.addEventListener('demoDataReady', function() {
+                            console.log('Demo data ready, loading dashboard...');
+                            loadDashboard();
+                        }, { once: true });
+                        
+                        // フォールバック: 1秒後にまだロードされていなければ強制的にロード
+                        setTimeout(function() {
+                            if (!window._dashboardLoaded) {
+                                console.log('Demo data timeout, loading dashboard anyway...');
+                                loadDashboard();
+                            }
+                        }, 1000);
+                    } else {
+                        // 通常モードの場合はすぐにロード
+                        loadDashboard();
+                    }
                 }
             }, 100);
         });

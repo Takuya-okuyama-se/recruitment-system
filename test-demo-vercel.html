@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Mode Test - Vercel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <link rel="stylesheet" href="unified-styles.css">
+    <script src="auth.js"></script>
+    <script src="demo-data.js"></script>
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-log {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status-success {
+            background: #10b981;
+            color: white;
+        }
+        .status-error {
+            background: #ef4444;
+            color: white;
+        }
+        .status-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .status-info {
+            background: #3b82f6;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Demo Mode Test - Vercel Environment</h1>
+        <p>This page tests if demo mode is working correctly on Vercel deployment.</p>
+        
+        <div id="testResults">
+            <h2>Test Results:</h2>
+            <div id="logOutput" class="test-log">Testing demo mode initialization...\n</div>
+        </div>
+        
+        <div id="statusBadges" style="margin-top: 20px;">
+            <h3>Status:</h3>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <button onclick="window.location.href='dashboard.html?demo'" class="btn btn-primary">
+                Go to Dashboard with Demo Mode
+            </button>
+            <button onclick="runTests()" class="btn btn-secondary">
+                Re-run Tests
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const log = (message, type = 'info') => {
+            const logDiv = document.getElementById('logOutput');
+            const timestamp = new Date().toISOString().substr(11, 12);
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            logDiv.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        const addBadge = (text, status) => {
+            const badgesDiv = document.getElementById('statusBadges');
+            const badge = document.createElement('span');
+            badge.className = `status-badge status-${status}`;
+            badge.textContent = text;
+            badgesDiv.appendChild(badge);
+        };
+
+        function checkScriptLoading() {
+            log('=== Checking Script Loading ===');
+            
+            // Check if scripts are loaded
+            const scripts = Array.from(document.scripts).map(s => s.src || 'inline script');
+            log(`Loaded scripts: ${scripts.length}`);
+            scripts.forEach((src, i) => {
+                if (src.includes('auth.js') || src.includes('demo-data.js') || src.includes('supabase')) {
+                    log(`  ${i + 1}. ${src}`);
+                }
+            });
+            
+            // Check global objects
+            log('\n=== Checking Global Objects ===');
+            
+            if (window.AuthSystem) {
+                log('✓ AuthSystem is loaded', 'success');
+                addBadge('AuthSystem ✓', 'success');
+                
+                if (typeof window.AuthSystem.isDemoMode === 'function') {
+                    const isDemoMode = window.AuthSystem.isDemoMode();
+                    log(`  isDemoMode() = ${isDemoMode}`);
+                } else {
+                    log('  isDemoMode() function not found', 'warning');
+                }
+            } else {
+                log('✗ AuthSystem not found', 'error');
+                addBadge('AuthSystem ✗', 'error');
+            }
+            
+            if (window.DemoData) {
+                log('✓ DemoData is loaded', 'success');
+                addBadge('DemoData ✓', 'success');
+                
+                if (window.DemoData.DEMO_DATA) {
+                    const dataKeys = Object.keys(window.DemoData.DEMO_DATA);
+                    log(`  Available data: ${dataKeys.join(', ')}`);
+                }
+            } else {
+                log('✗ DemoData not found', 'error');
+                addBadge('DemoData ✗', 'error');
+            }
+            
+            if (window.SUPABASE_CLIENT) {
+                log('✓ SUPABASE_CLIENT is loaded', 'success');
+                addBadge('Supabase ✓', 'success');
+                
+                if (window.SUPABASE_CLIENT._demoOverridden) {
+                    log('  Demo override is active', 'success');
+                    addBadge('Demo Override ✓', 'success');
+                } else {
+                    log('  Demo override NOT active', 'warning');
+                    addBadge('Demo Override ✗', 'warning');
+                }
+            } else {
+                log('✗ SUPABASE_CLIENT not found', 'error');
+                addBadge('Supabase ✗', 'error');
+            }
+        }
+
+        function checkURLParameters() {
+            log('\n=== Checking URL Parameters ===');
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasDemo = urlParams.has('demo');
+            log(`URL has 'demo' parameter: ${hasDemo}`);
+            
+            if (hasDemo) {
+                addBadge('URL Demo Param ✓', 'success');
+            } else {
+                addBadge('URL Demo Param ✗', 'warning');
+            }
+            
+            return hasDemo;
+        }
+
+        function checkLocalStorage() {
+            log('\n=== Checking LocalStorage ===');
+            const session = localStorage.getItem('recruitment_session');
+            const mode = localStorage.getItem('recruitment_mode');
+            
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    log(`Session found: mode=${sessionData.mode}`);
+                    if (sessionData.mode === 'demo') {
+                        addBadge('Session Demo ✓', 'success');
+                    }
+                } catch (e) {
+                    log('Session parse error: ' + e.message, 'error');
+                }
+            } else {
+                log('No session found in localStorage');
+            }
+            
+            if (mode) {
+                log(`Mode in localStorage: ${mode}`);
+            }
+        }
+
+        async function testDemoDataQuery() {
+            log('\n=== Testing Demo Data Query ===');
+            
+            if (!window.SUPABASE_CLIENT) {
+                log('Cannot test query - SUPABASE_CLIENT not available', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await window.SUPABASE_CLIENT
+                    .from('candidates')
+                    .select('*')
+                    .limit(5);
+                
+                if (error) {
+                    log(`Query error: ${error.message}`, 'error');
+                } else {
+                    log(`Query successful: ${data ? data.length : 0} records returned`, 'success');
+                    if (data && data.length > 0) {
+                        log(`First candidate: ${data[0].name || 'Unknown'}`);
+                        
+                        // Check if this is demo data
+                        if (data[0].name === '山田太郎') {
+                            log('✓ Demo data detected!', 'success');
+                            addBadge('Demo Data Active ✓', 'success');
+                        } else {
+                            log('⚠️ Not demo data - might be real Supabase data', 'warning');
+                            addBadge('Real Data Active', 'warning');
+                        }
+                    }
+                }
+            } catch (e) {
+                log(`Query exception: ${e.message}`, 'error');
+            }
+        }
+
+        async function runTests() {
+            document.getElementById('logOutput').textContent = 'Testing demo mode initialization...\n';
+            document.getElementById('statusBadges').innerHTML = '<h3>Status:</h3>';
+            
+            log('Starting demo mode tests on Vercel...');
+            log(`Current URL: ${window.location.href}`);
+            log(`User Agent: ${navigator.userAgent}`);
+            
+            checkScriptLoading();
+            checkURLParameters();
+            checkLocalStorage();
+            
+            // Wait a bit for any async initialization
+            log('\n=== Waiting for async initialization ===');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Re-check after wait
+            log('\n=== Re-checking after wait ===');
+            if (window.SUPABASE_CLIENT && window.SUPABASE_CLIENT._demoOverridden) {
+                log('Demo override is now active', 'success');
+            } else {
+                log('Demo override still not active', 'warning');
+            }
+            
+            await testDemoDataQuery();
+            
+            log('\n=== Test Complete ===');
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', () => {
+            // Add demo parameter if not present
+            const urlParams = new URLSearchParams(window.location.search);
+            if (!urlParams.has('demo')) {
+                log('Adding demo parameter to URL...');
+                window.history.replaceState({}, '', window.location.pathname + '?demo');
+            }
+            
+            setTimeout(runTests, 500);
+        });
+
+        // Listen for auth complete event
+        document.addEventListener('authComplete', (e) => {
+            log('\n=== Auth Complete Event Received ===', 'info');
+            log(`Event detail: ${JSON.stringify(e.detail)}`);
+            setTimeout(runTests, 500);
+        });
+
+        // Listen for demo data ready event
+        document.addEventListener('demoDataReady', (e) => {
+            log('\n=== Demo Data Ready Event Received ===', 'info');
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>
+</content>
+</invoke>
